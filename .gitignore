@@ -1,0 +1,5 @@
+# Local tooling config, not part of the published site
+.claude/
+
+# Tutor's reference material -- an input to this project, not something we redistribute
+*.pdf
