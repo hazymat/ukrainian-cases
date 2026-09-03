@@ -45,9 +45,10 @@ built to keep translation close at hand rather than making you hold two language
 Finishing an exercise isn't just a checkmark:
 
 - **Themed rewards, every time.** Each score out of 10 draws from a pool of Ukrainian food- and
-  culture-themed lines, roast-y below 7, warm and proud above it, so the same exercise doesn't feel the
-  same way twice.
-- **Confetti for a perfect score.** 10/10 gets a small animated burst instead of the usual completion flash.
+  culture-themed lines: a slightly sarcastic, family-friendly roast below 7 (never mean), warm and proud
+  above it, so the same exercise doesn't feel the same way twice.
+- **Ukrainian flag-coloured confetti for a perfect score.** 10/10 gets a small blue-and-yellow (plus gold)
+  animated burst instead of the usual completion flash.
 - **A trophy shelf.** Every reward earned shows up in a small collection on the case page it came from, and
   in one combined [trophy shelf](https://hazymat.github.io/ukrainian-cases/trophy.html) across every case.
   Tap a trophy to see the line again.
