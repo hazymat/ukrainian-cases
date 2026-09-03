@@ -129,13 +129,18 @@ details:not([open])>*:not(summary){display:none!important}
    keyframe boundary, and since every piece shares the same percentage stops they all visibly
    pause at the same points. Linear keeps velocity continuous. Fountain shape (poof up and out,
    then a slow float down) comes purely from keyframe spacing: the rise happens over a short
-   0-16% slice (fast), the float down is spread over the remaining 84% (slow), and the dx
-   multiplier only ever grows (0.35, 0.6, 0.85, 1.0) so pieces drift steadily outward and never
-   reverse or overshoot back toward the centre. Opacity fades only over the last stretch. */
+   0-20% slice (fast), the float down is spread over the remaining 80% (slow), and the dx
+   multiplier only ever grows (0.2, 0.35, 0.6, 0.85, 1.0) so pieces drift steadily outward and
+   never reverse or overshoot back toward the centre. The peak itself is spread across three
+   closely-spaced keyframes (10%/16%/20%) with a shrinking rise per step, rather than one single
+   jump straight to the top, so it decelerates into the peak instead of snapping into a reversal
+   that reads as hitting a ceiling and bouncing. Opacity fades only over the last stretch. */
 @keyframes confetti-fall{
   0%{transform:translate(0,0) rotate(0deg) scale(0.5);opacity:0}
   6%{opacity:1}
-  16%{transform:translate(calc(var(--dx,0px)*0.35),-110px) rotate(calc(var(--rot,180deg)*0.25)) scale(1)}
+  10%{transform:translate(calc(var(--dx,0px)*0.2),-90px) rotate(calc(var(--rot,180deg)*0.15)) scale(1)}
+  16%{transform:translate(calc(var(--dx,0px)*0.3),-128px) rotate(calc(var(--rot,180deg)*0.22)) scale(1)}
+  20%{transform:translate(calc(var(--dx,0px)*0.35),-140px) rotate(calc(var(--rot,180deg)*0.25)) scale(1)}
   40%{transform:translate(calc(var(--dx,0px)*0.6),40px) rotate(calc(var(--rot,180deg)*0.5)) scale(1)}
   65%{transform:translate(calc(var(--dx,0px)*0.85),210px) rotate(calc(var(--rot,180deg)*0.75)) scale(1)}
   88%{transform:translate(var(--dx,0px),360px) rotate(calc(var(--rot,180deg)*0.95)) scale(1);opacity:1}

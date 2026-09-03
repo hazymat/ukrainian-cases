@@ -341,31 +341,38 @@ function spawnConfetti(el){
   const wrap = document.createElement("div");
   wrap.className = "confetti-burst";
   const rect = el.getBoundingClientRect();
-  for(let i=0;i<20;i++){
-    const piece = document.createElement("span");
-    // Spread across the full width from the start (a burst-point cluster read as a single
-    // narrow line); a little random vertical offset stops that starting row from looking like
-    // a flat line. Duration also varies per piece so they don't fall in lockstep, for a
-    // flutterier, less uniform feel.
-    piece.className = "confetti-piece"+(i%3===0 ? " confetti-round" : "");
-    const leftPct = Math.random()*100;
-    piece.style.left = leftPct+"%";
-    piece.style.top = (Math.random()*24-12)+"px";
-    piece.style.background = colors[i % colors.length];
-    piece.style.animationDuration = (2.1+Math.random()*0.7)+"s";
-    piece.style.animationDelay = (Math.random()*0.25)+"s";
-    piece.style.setProperty("--rot", (Math.random()*480-240)+"deg");
-    // A fountain-like poof: drift is proportional to how far a piece already spawned from the
-    // centre (a piece near the middle barely moves, one near an edge travels further outward),
-    // so the spread fans out continuously instead of splitting into two piles either side of
-    // an empty middle. A little jitter on top keeps it from looking too evenly graduated.
-    const centreOffset = (leftPct-50)/50;
-    const dx = centreOffset*rect.width*(0.4+Math.random()*0.3) + (Math.random()*70-35);
-    piece.style.setProperty("--dx", dx+"px");
-    wrap.appendChild(piece);
+  function throwWave(count){
+    for(let i=0;i<count;i++){
+      const piece = document.createElement("span");
+      // Spread across the full width from the start (a burst-point cluster read as a single
+      // narrow line); a little random vertical offset stops that starting row from looking
+      // like a flat line. Duration also varies per piece so they don't fall in lockstep, for
+      // a flutterier, less uniform feel.
+      piece.className = "confetti-piece"+(i%3===0 ? " confetti-round" : "");
+      const leftPct = Math.random()*100;
+      piece.style.left = leftPct+"%";
+      piece.style.top = (Math.random()*24-12)+"px";
+      piece.style.background = colors[i % colors.length];
+      piece.style.animationDuration = (2.1+Math.random()*0.7)+"s";
+      piece.style.animationDelay = (Math.random()*0.25)+"s";
+      piece.style.setProperty("--rot", (Math.random()*480-240)+"deg");
+      // A fountain-like poof: drift is proportional to how far a piece already spawned from
+      // the centre (a piece near the middle barely moves, one near an edge travels further
+      // outward), so the spread fans out continuously instead of splitting into two piles
+      // either side of an empty middle. A little jitter on top keeps it from looking too
+      // evenly graduated.
+      const centreOffset = (leftPct-50)/50;
+      const dx = centreOffset*rect.width*(0.4+Math.random()*0.3) + (Math.random()*70-35);
+      piece.style.setProperty("--dx", dx+"px");
+      wrap.appendChild(piece);
+    }
   }
   el.appendChild(wrap);
-  setTimeout(()=>wrap.remove(), 2800);
+  // Five quick handfuls thrown in close succession, rather than one flat burst of pieces
+  // appearing all at once, so it reads more like confetti being thrown than a single pop.
+  const waveDelays = [0,90,180,270,360];
+  waveDelays.forEach(delay=>setTimeout(()=>throwWave(8), delay));
+  setTimeout(()=>wrap.remove(), waveDelays[waveDelays.length-1]+3000);
 }
 
 // The reward/roast box (and its Reset button) is the only sign a completed exercise gives once
