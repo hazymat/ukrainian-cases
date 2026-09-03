@@ -340,6 +340,8 @@ function spawnConfetti(el){
   const colors = ["#0057B7","#FFD700","#D4A24C","#F2EEE3"];
   const wrap = document.createElement("div");
   wrap.className = "confetti-burst";
+  const rect = el.getBoundingClientRect();
+  const vw = window.innerWidth;
   for(let i=0;i<20;i++){
     const piece = document.createElement("span");
     // Spread across the full width from the start (a burst-point cluster read as a single
@@ -347,13 +349,21 @@ function spawnConfetti(el){
     // a flat line. Duration also varies per piece so they don't fall in lockstep, for a
     // flutterier, less uniform feel.
     piece.className = "confetti-piece"+(i%3===0 ? " confetti-round" : "");
-    piece.style.left = (Math.random()*100)+"%";
+    const leftPct = Math.random()*100;
+    piece.style.left = leftPct+"%";
     piece.style.top = (Math.random()*24-12)+"px";
     piece.style.background = colors[i % colors.length];
     piece.style.animationDuration = (2.1+Math.random()*0.7)+"s";
     piece.style.animationDelay = (Math.random()*0.25)+"s";
     piece.style.setProperty("--rot", (Math.random()*480-240)+"deg");
-    piece.style.setProperty("--dx", (Math.random()*320-160)+"px");
+    // Drift is worked out from where the piece actually spawns to the real edges of the
+    // window, not a fixed pixel range, so the spread reaches the browser edges however wide
+    // or narrow the exercise card is.
+    const spawnX = rect.left + (leftPct/100)*rect.width;
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    const room = dir < 0 ? spawnX : (vw - spawnX);
+    const dx = dir * Math.max(room, 0) * (0.5 + Math.random()*0.45);
+    piece.style.setProperty("--dx", dx+"px");
     wrap.appendChild(piece);
   }
   el.appendChild(wrap);
