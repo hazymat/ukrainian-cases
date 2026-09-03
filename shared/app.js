@@ -76,6 +76,20 @@ function recordGroupAnswer(id, isCorrect){
   const justCompleted = g.answered>=g.total && !STORE[groupKey+"_cel"];
   if(justCompleted){
     STORE[groupKey+"_cel"]=true;
+    // Personal-best tracking: "best_<groupKey>" deliberately doesn't start with groupKey+"_",
+    // so resetGroup's prefix-based clear doesn't wipe it -- the historical high score survives
+    // a reset, which is the point (something for the next attempt to beat). The "_rec" flag
+    // (does start with the prefix, so it IS cleared on reset) records whether THIS completion
+    // was a new record, so ensureCelebrateNote can show the badge consistently across reloads
+    // without re-deriving it from a comparison that a later reset/redo would change the answer to.
+    const bestKey = "best_"+groupKey;
+    const prevBest = STORE[bestKey];
+    if(prevBest===undefined){
+      STORE[bestKey] = g.correct;
+    } else if(g.correct > prevBest){
+      STORE[bestKey] = g.correct;
+      STORE[groupKey+"_rec"] = true;
+    }
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STORE)); }catch(e){}
   }
   updateGroupUI(groupKey);
@@ -154,7 +168,7 @@ const EMOJI_IMG_MAP = {
   "1f370":"shortcake", "1f36f":"honey-pot", "1f475":"old-woman", "1f35e":"bread",
   "1f37d":"fork-knife-plate", "1f3e1":"house-garden", "1f3db":"classical-building", "1f943":"tumbler-glass",
   "1f389":"party-popper", "1f377":"wine-glass", "1f95a":"egg", "1f6e2":"oil-drum",
-  "1f376":"sake", "1f3c6":"trophy", "1f455":"tshirt", "1f33b":"sunflower"
+  "1f376":"sake", "1f3c6":"trophy", "1f455":"tshirt", "1f33b":"sunflower", "1f3c5":"medal"
 };
 const UA_FLAG = "🇺🇦";
 
@@ -196,8 +210,12 @@ function ensureCelebrateNote(el, g, groupKey){
   // prefix is added there.
   const uk = tierKey==="t5" ? reward.uk : `${correct}/${g.total}. ${TIER_LEADS[tierKey].uk} ${reward.uk}`;
   const en = tierKey==="t5" ? reward.en : `${correct}/${g.total}. ${TIER_LEADS[tierKey].en} ${reward.en}`;
+  const isRecord = !!STORE[groupKey+"_rec"];
+  const recordBadge = isRecord
+    ? `<span class="record-badge">${emojify("🏅")}<span>Новий рекорд! <span class="en">New record!</span></span></span>`
+    : "";
   note.hidden = false;
-  note.innerHTML = `<span class="celebrate-emoji">${emojify(reward.emoji)}</span><span class="celebrate-text">${uk}<span class="en">${wrapUkWords(en)}</span></span>`;
+  note.innerHTML = `${recordBadge}<span class="celebrate-row"><span class="celebrate-emoji">${emojify(reward.emoji)}</span><span class="celebrate-text">${uk}<span class="en">${wrapUkWords(en)}</span></span></span>`;
 }
 
 function celebrateGroup(groupKey){

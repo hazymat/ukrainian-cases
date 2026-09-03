@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Колекція нагород: Ukrainian Cases Reward Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/style.css">
+<style>
+  .trophy-page{max-width:720px;margin:0 auto;padding:0 20px 80px}
+  .empty-state{background:#24365C;border:1px solid #37507F;border-radius:10px;padding:28px 24px;text-align:center;color:#9FB0CC;margin-top:24px}
+  .empty-state .big-emoji{font-size:2.4rem;display:block;margin-bottom:10px}
+  .page-group{margin-top:36px}
+  .page-group-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:8px;border-bottom:1px solid #37507F;margin-bottom:14px}
+  .page-group-head h2{font-size:1.15rem;margin:0;color:#D4A24C}
+  .page-group-count{font-size:0.82rem;color:#9FB0CC;white-space:nowrap}
+  .trophy-grid{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+  .trophy-card{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:14px 16px;background:#1E2F52;border:1px solid #37507F;border-radius:8px;align-items:start}
+  .trophy-card .emoji{font-size:1.3rem;line-height:1.4}
+  .trophy-card .cat{color:#9FB0CC;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 4px}
+  .trophy-card .uk{font-weight:700;font-size:0.95rem;line-height:1.4;margin:0}
+  .trophy-card .en{display:block;margin-top:4px;color:#9FB0CC;font-style:italic;font-size:0.85rem;line-height:1.45}
+  .trophy-card .en .uk-word{font-style:normal;color:#F2EEE3}
+  .trophy-card.is-record{border-color:rgba(212,162,76,0.6);background:rgba(212,162,76,0.08)}
+  .record-tag{display:inline-flex;align-items:center;gap:4px;color:#D4A24C;font-weight:700;font-size:0.72rem;margin-left:8px}
+  .summary-line{color:#9FB0CC;font-size:0.92rem;margin:18px 0 0}
+</style>
+</head>
+<body>
+<div class="page-bg">
+<div class="wrap trophy-page">
+  <div class="hero" style="padding-bottom:20px">
+    <a class="home-link" href="index.html">‹ All cases</a>
+    <p class="eyebrow-uk">Колекція нагород</p>
+    <p class="eyebrow-en">My reward collection</p>
+    <h1>Trophy <span class="q-word">shelf</span></h1>
+    <div class="summary-box">
+      <p>Every themed reward you've earned so far, pulled straight from your own saved progress on this device.
+      Complete an exercise on any case page to add to the shelf; a gold border marks your personal best on that
+      exercise.</p>
+    </div>
+  </div>
+
+  <div id="content"></div>
+</div>
+</div>
+
+<script src="shared/rewards-data.js"></script>
+<script>
+// Mirrors EMOJI_IMG_MAP / emojify() in shared/app.js -- kept in sync manually, since this page
+// reads other pages' localStorage directly rather than loading their full app.
+const EMOJI_IMG_MAP = {
+  "1f62d":"crying-face", "1f624":"steam-nose", "1f611":"expressionless", "1f629":"weary",
+  "1f644":"rolling-eyes", "1f372":"pot-of-food", "1f95f":"dumpling", "1f9ca":"ice",
+  "1f956":"baguette-bread", "1f52a":"kitchen-knife", "1f342":"fallen-leaf", "1f96c":"leafy-green",
+  "1f963":"bowl-spoon", "1f954":"potato", "2728":"sparkles", "1fad9":"jar",
+  "1f383":"jack-o-lantern", "1f9c0":"cheese", "1f968":"pretzel", "1f96f":"bagel",
+  "1f358":"rice-cracker", "1f32f":"burrito", "1f9c4":"garlic", "1f9f5":"thread",
+  "1f34e":"red-apple", "1f33d":"corn", "1f352":"cherries", "1f373":"cooking",
+  "1f370":"shortcake", "1f36f":"honey-pot", "1f475":"old-woman", "1f35e":"bread",
+  "1f37d":"fork-knife-plate", "1f3e1":"house-garden", "1f3db":"classical-building",
+  "1f943":"tumbler-glass", "1f389":"party-popper", "1f377":"wine-glass", "1f95a":"egg",
+  "1f6e2":"oil-drum", "1f376":"sake", "1f3c6":"trophy", "1f455":"tshirt", "1f33b":"sunflower",
+  "1f3c5":"medal"
+};
+const UA_FLAG = "🇺🇦";
+function emojify(str){
+  if(str === UA_FLAG) return `<img class="flag-img" src="assets/flag-ukraine.svg" alt="Прапор України">`;
+  return [...str].map(ch=>{
+    const cp = ch.codePointAt(0).toString(16);
+    const name = EMOJI_IMG_MAP[cp];
+    return name ? `<img class="emoji-img" src="assets/emoji/${name}.svg" alt="">` : ch;
+  }).join("");
+}
+function wrapUkWords(en){
+  return en.replace(/[Ѐ-ӿ]+/g, m => `<span class="uk-word">${m}</span>`);
+}
+
+// One entry per case page: its localStorage key and how to label/link it here.
+const PAGES = [
+  {key:"uk_case_nominative_progress_v1", label:"Називний відмінок", labelEn:"Nominative", href:"nominative_case.html"},
+  {key:"uk_case_genitive_progress_v2", label:"Родовий відмінок", labelEn:"Genitive", href:"genitive_case.html"},
+  {key:"uk_case_accusative_progress_v2", label:"Знахідний відмінок", labelEn:"Accusative", href:"accusative_case.html"},
+  {key:"uk_case_mixed_progress_v1", label:"Родовий чи Знахідний", labelEn:"Genitive vs Accusative", href:"genitive_vs_accusative.html"}
+];
+
+// Exercise-category label by id-prefix, matching the four-part taxonomy every single-case page
+// uses (see CONVENTIONS.md) plus the combo page's flat "m" sections.
+const CATEGORY = {
+  u: {uk:"Розпізнавання вживання", en:"Usage recognition"},
+  v: {uk:"Словник і закінчення", en:"Vocabulary & endings"},
+  f: {uk:"Застосуй відмінок", en:"Apply the case"},
+  r: {uk:"Повторення", en:"Revision"},
+  m: {uk:"Змішана вправа", en:"Combo drill"}
+};
+
+const contentEl = document.getElementById('content');
+let totalTrophies = 0;
+
+PAGES.forEach(page=>{
+  let store = {};
+  try{ store = JSON.parse(localStorage.getItem(page.key) || "{}"); }catch(e){ store = {}; }
+
+  const trophies = Object.keys(store)
+    .filter(k => k.endsWith("_rw"))
+    .map(k=>{
+      const groupKey = k.slice(0, -3); // strip "_rw"
+      const assigned = store[k];
+      const pool = REWARD_TIERS[assigned.tier];
+      if(!pool || !pool[assigned.idx]) return null;
+      const prefix = groupKey.split("_")[0];
+      const isRecord = !!store[groupKey+"_rec"];
+      return {groupKey, reward: pool[assigned.idx], category: CATEGORY[prefix] || {uk:groupKey, en:groupKey}, isRecord};
+    })
+    .filter(Boolean)
+    .sort((a,b)=> a.groupKey.localeCompare(b.groupKey, undefined, {numeric:true}));
+
+  if(!trophies.length) return;
+  totalTrophies += trophies.length;
+
+  const section = document.createElement('div');
+  section.className = 'page-group';
+  section.innerHTML = `<div class="page-group-head"><h2><a href="${page.href}" style="color:inherit;text-decoration:none">${page.label} · ${page.labelEn}</a></h2><span class="page-group-count">${trophies.length} earned</span></div>`;
+  const ol = document.createElement('ul');
+  ol.className = 'trophy-grid';
+  trophies.forEach(t=>{
+    const li = document.createElement('li');
+    li.className = 'trophy-card'+(t.isRecord ? ' is-record' : '');
+    li.innerHTML = `<span class="emoji">${emojify(t.reward.emoji)}</span><span class="body"><p class="cat">${t.category.uk} · ${t.category.en}${t.isRecord ? `<span class="record-tag">${emojify("🏅")}Рекорд · Record</span>` : ''}</p><p class="uk">${t.reward.uk}</p><span class="en">${wrapUkWords(t.reward.en)}</span></span>`;
+    ol.appendChild(li);
+  });
+  section.appendChild(ol);
+  contentEl.appendChild(section);
+});
+
+if(!totalTrophies){
+  contentEl.innerHTML = `<div class="empty-state"><span class="big-emoji">🥺</span>The shelf's empty for now. Finish any exercise on a case page and its reward will show up here.</div>`;
+} else {
+  const summary = document.createElement('p');
+  summary.className = 'summary-line';
+  summary.textContent = `${totalTrophies} ${totalTrophies===1?"trophy":"trophies"} earned on this device.`;
+  contentEl.prepend(summary);
+}
+</script>
+</body>
+</html>
