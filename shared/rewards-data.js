@@ -95,7 +95,7 @@ const REWARD_TIERS = {
     {emoji:"🥨", uk:"10/10. Вергуни вийшли хрумкими настільки, що чути було з іншої кімнати.", en:"10/10 - Вергуни so crisp you could hear them from the next room."},
     {emoji:"🧄", uk:"Ідеально. Часникові пампушки розлетілися ще до того, як борщ поставили на стіл.", en:"Perfect. Часникові пампушки disappeared before the борщ even hit the table."},
     {emoji:"🧊", uk:"Супер! Холодець застиг ідеально рівним шаром, без жодної бульбашки.", en:"Super! Холодець set in one perfectly smooth layer, not a bubble in sight."},
-    {emoji:"🍯", uk:"Бездоганно. Медова баночка спорожніла тільки тому, що всі просили добавки.", en:"Flawless. The honey jar only emptied because everyone kept asking for more."},
+    {emoji:"🍯", uk:"Бездоганно. Ця банка меду не пережила оплесків.", en:"Flawless. This jar of honey didn't survive the applause."},
     {emoji:"🌻", uk:"Чудово! Соняшникове насіння підсмажили окремо, спеціально для тебе, у знак поваги.", en:"Great score! Sunflower seeds roasted specially for you, as a mark of respect."},
     {emoji:"🥟", uk:"10/10. Дюжина вареників зникла з тарілки за хвилину, і всі хвалили кухаря.", en:"10/10 - A dozen вареники vanished off the plate in a minute, and everyone praised the cook."},
     {emoji:"🇺🇦", uk:"Ідеально. Прапор майорить над тобою, і всі це бачать.", en:"Perfect. The flag flies over you, and everyone sees it."},
