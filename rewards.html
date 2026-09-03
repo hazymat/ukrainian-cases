@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Reward Library: Ukrainian Cases (internal)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/style.css">
+<style>
+  body{max-width:820px;margin:0 auto;padding:24px 20px 80px}
+  .devnote{background:#24365C;border:1px solid #37507F;border-radius:10px;padding:16px 20px;margin-bottom:28px;color:#9FB0CC;font-size:0.9rem;line-height:1.6}
+  .devnote strong{color:#F2EEE3}
+  .devnote code{background:#1E2F52;padding:1px 5px;border-radius:4px;font-size:0.88em}
+  nav.jump{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 28px}
+  nav.jump a{color:#F2EEE3;text-decoration:none;font-size:0.82rem;padding:5px 10px;border-radius:6px;background:#233A63;border:1px solid #37507F}
+  nav.jump a:hover,nav.jump a:focus-visible{border-color:#D4A24C;color:#D4A24C}
+  nav.jump a .n{color:#9FB0CC;margin-left:4px}
+  section.tier{margin-top:32px;scroll-margin-top:16px}
+  .tier-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:8px;border-bottom:1px solid #37507F;margin-bottom:14px}
+  .tier-head h2{font-size:1.05rem;margin:0;font-weight:700}
+  .tier-range{color:#9FB0CC;font-weight:400;font-size:0.85rem;margin-left:8px}
+  .tier-count{font-size:0.78rem;color:#9FB0CC;white-space:nowrap}
+  .tier.is-roast .tier-head h2{color:#C4553F}
+  .tier:not(.is-roast) .tier-head h2{color:#4C9A6A}
+  ol.entries{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+  .entry{display:grid;grid-template-columns:1.6em auto 1fr;gap:10px;padding:12px 14px;border-radius:8px;align-items:start}
+  .entry:nth-child(odd){background:#1E2F52}
+  .entry .num{color:#9FB0CC;font-size:0.72rem;padding-top:3px;text-align:right}
+  .entry .emoji{font-size:1.1rem;line-height:1.5}
+  .entry .uk{font-weight:700;font-size:0.96rem;line-height:1.45}
+  .entry .en{display:block;margin-top:4px;color:#9FB0CC;font-style:italic;font-size:0.87rem;line-height:1.5}
+  .entry .en .uk-word{font-style:normal;color:#F2EEE3}
+  footer.note{margin-top:44px;padding-top:18px;border-top:1px solid #37507F;color:#9FB0CC;font-size:0.82rem;line-height:1.6}
+</style>
+</head>
+<body>
+  <p><a class="home-link" href="index.html">‹ All cases</a></p>
+  <h1>Reward library</h1>
+  <p class="devnote"><strong>Internal reference, not for learners.</strong> This page lists every line the per-exercise completion celebration can draw, grouped by score. It's not linked from anywhere on the site; it exists so the content can be reviewed and edited over time. It loads <code>shared/rewards-data.js</code> directly, the same file <code>shared/app.js</code> uses, so this list is always exactly what's live: edit a line in that one file and both update.</p>
+
+  <p style="color:#9FB0CC;font-size:0.9rem;line-height:1.6">Picked per exercise via a site-wide shuffle bag: each tier's pool is dealt out in shuffled order and only reshuffles once every line has been seen. Whichever line gets drawn sticks for that exercise across reloads, until it's reset. Every tier except 10/10 gets a dynamic <code>N/total. Lead-in!</code> prefix added in code (see <code>TIER_LEADS</code> in <code>shared/app.js</code>) ahead of the line shown below; the 10/10 pool already opens each line with its own score/exclamation.</p>
+
+  <nav class="jump" id="jumpNav"></nav>
+
+  <div id="tiers"></div>
+
+  <footer class="note" id="footerNote"></footer>
+
+<script src="shared/rewards-data.js"></script>
+<script>
+const TIER_META = {
+  t0: {label:"Score 0–2", range:"shared pool", roast:true},
+  t1: {label:"Score 3–4", range:"", roast:true},
+  t2: {label:"Score 5–6", range:"last roast tier", roast:true},
+  t3: {label:"Score 7–8", range:"warm from here", roast:false},
+  t4: {label:"Score 9", range:"so close", roast:false},
+  t5: {label:"Score 10", range:"one-off pool", roast:false}
+};
+
+function wrapUkWords(en){
+  return en.replace(/[Ѐ-ӿ]+/g, m => `<span class="uk-word">${m}</span>`);
+}
+
+const jumpNav = document.getElementById('jumpNav');
+const tiersEl = document.getElementById('tiers');
+let total = 0;
+
+Object.keys(TIER_META).forEach(tierKey=>{
+  const meta = TIER_META[tierKey];
+  const pool = REWARD_TIERS[tierKey] || [];
+  total += pool.length;
+
+  const a = document.createElement('a');
+  a.href = '#'+tierKey;
+  a.innerHTML = `${meta.label}<span class="n">&middot;${pool.length}</span>`;
+  jumpNav.appendChild(a);
+
+  const section = document.createElement('section');
+  section.className = 'tier'+(meta.roast?' is-roast':'');
+  section.id = tierKey;
+  section.innerHTML = `<div class="tier-head"><h2>${meta.label}${meta.range?`<span class="tier-range">${meta.range}</span>`:''}</h2><span class="tier-count">${pool.length} lines</span></div>`;
+  const ol = document.createElement('ol');
+  ol.className = 'entries';
+  pool.forEach((r,i)=>{
+    const li = document.createElement('li');
+    li.className = 'entry';
+    li.innerHTML = `<span class="num">${i}</span><span class="emoji">${r.emoji}</span><span class="body"><span class="uk">${r.uk}</span><span class="en">${wrapUkWords(r.en)}</span></span>`;
+    ol.appendChild(li);
+  });
+  section.appendChild(ol);
+  tiersEl.appendChild(section);
+});
+
+document.getElementById('footerNote').textContent = `${total} lines total across ${Object.keys(TIER_META).length} tiers.`;
+</script>
+</body>
+</html>
