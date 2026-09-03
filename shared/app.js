@@ -202,7 +202,7 @@ const EMOJI_IMG_MAP = {
   "1f37d":"fork-knife-plate", "1f3e1":"house-garden", "1f3db":"classical-building", "1f943":"tumbler-glass",
   "1f389":"party-popper", "1f377":"wine-glass", "1f95a":"egg", "1f6e2":"oil-drum",
   "1f376":"sake", "1f3c6":"trophy", "1f455":"tshirt", "1f33b":"sunflower", "1f3c5":"medal",
-  "26a0":"warning"
+  "26a0":"warning", "23f3":"hourglass"
 };
 const UA_FLAG = "🇺🇦";
 
@@ -226,7 +226,9 @@ function emojify(str){
 // page load (which would otherwise append the note before the last question's own DOM node had
 // been attached yet).
 function ensureCelebrateNote(el, g, groupKey){
-  const note = el.querySelector(":scope > .body > .celebrate-note");
+  // Not scoped to .body specifically: repositionCelebrateNote moves this element between .body
+  // (expanded) and summary (collapsed), so it may currently live in either place.
+  const note = el.querySelector(".celebrate-note");
   if(!note) return;
   const correct = Math.max(0, Math.min(10, g.correct));
   const tierKey = tierKeyForScore(correct);
@@ -255,7 +257,39 @@ function ensureCelebrateNote(el, g, groupKey){
     ? `<span class="record-badge">${emojify("🏅")}<span>Новий рекорд! <span class="en">New record!</span></span></span>`
     : "";
   note.hidden = false;
-  note.innerHTML = `<span class="celebrate-tags">${scoreBadge}${recordBadge}</span><span class="celebrate-row"><span class="celebrate-emoji">${emojify(reward.emoji)}</span><span class="celebrate-text">${uk}<span class="en">${wrapUkWords(en)}</span></span></span>`;
+  note.innerHTML = `<span class="celebrate-tags"><span class="celebrate-badges">${scoreBadge}${recordBadge}</span><button type="button" class="celebrate-reset">Скинути / Reset</button></span><span class="celebrate-row"><span class="celebrate-emoji">${emojify(reward.emoji)}</span><span class="celebrate-text">${uk}<span class="en">${wrapUkWords(en)}</span></span></span>`;
+  note.querySelector(".celebrate-reset").onclick = (e)=>{
+    e.preventDefault(); e.stopPropagation();
+    resetGroup(groupKey);
+  };
+  repositionCelebrateNote(el);
+  renderPageTrophies();
+}
+
+// Small "trophy shelf" box in the hero of each page, showing just the icon for every reward
+// earned so far on THIS page (unlike trophy.html, which reads every page's storage at once).
+// CASE_LABEL is an optional {uk, en} global each page defines alongside DATA/STORAGE_KEY; falls
+// back to blank case-name text if a page doesn't define it, rather than erroring.
+function renderPageTrophies(){
+  const body = document.getElementById("pageTrophyBody");
+  if(!body) return;
+  const label = (typeof CASE_LABEL!=="undefined") ? CASE_LABEL : {uk:"", en:""};
+  const titleEl = document.getElementById("pageTrophyTitle");
+  if(titleEl){
+    titleEl.innerHTML = `Твої трофеї: ${label.uk}<span class="en">Your trophies: ${label.en}</span>`;
+  }
+  const earned = Object.keys(STORE)
+    .filter(k=>k.endsWith("_rw"))
+    .map(k=>STORE[k])
+    .filter(a=>a && REWARD_TIERS[a.tier] && REWARD_TIERS[a.tier][a.idx]);
+  if(!earned.length){
+    body.innerHTML = `<p class="trophy-box-empty">${emojify("⏳")}<span>Тут з'являться твої трофеї за ${label.uk}!<span class="en">Your trophies for ${label.en} will show here!</span></span></p>`;
+    return;
+  }
+  body.innerHTML = earned.map(a=>{
+    const reward = REWARD_TIERS[a.tier][a.idx];
+    return `<span class="trophy-box-icon">${emojify(reward.emoji)}</span>`;
+  }).join("");
 }
 
 function celebrateGroup(groupKey){
@@ -263,6 +297,20 @@ function celebrateGroup(groupKey){
   if(!el) return;
   el.classList.add("celebrate-pulse");
   setTimeout(()=>el.classList.remove("celebrate-pulse"), 1400);
+}
+
+// The reward/roast box (and its Reset button) is the only sign a completed exercise gives once
+// there's no status line in the summary any more -- so it needs to be visible collapsed too, not
+// just after expanding. It lives in .body (after the last question) while open, and moves into
+// summary itself (visible whether open or closed) while collapsed. Re-run on every toggle.
+function repositionCelebrateNote(detailsEl){
+  const summary = detailsEl.querySelector(":scope > summary");
+  const body = detailsEl.querySelector(":scope > .body");
+  if(!summary || !body) return;
+  const note = summary.querySelector(":scope > .celebrate-note") || body.querySelector(":scope > .celebrate-note");
+  if(!note) return;
+  if(detailsEl.open) body.appendChild(note);
+  else summary.appendChild(note);
 }
 
 function wireGroupReset(statusEl, groupKey){
@@ -282,9 +330,11 @@ function updateGroupUI(groupKey){
   el.classList.toggle("group-complete", complete);
   if(statusEl){
     if(complete){
+      // No status text here once complete -- the reward/roast box (with its own Reset button,
+      // top right) replaces it, and is repositioned into the summary itself so it's visible
+      // whether the exercise is expanded or collapsed. See ensureCelebrateNote/repositionCelebrateNote.
       statusEl.className = "group-status group-status-complete";
-      statusEl.innerHTML = `<span class="group-check">✅</span><span>Завершено · Complete. ${g.correct}/${g.total} правильно / correct.</span><button type="button" class="group-reset">Скинути / Reset</button>`;
-      wireGroupReset(statusEl, groupKey);
+      statusEl.innerHTML = "";
       ensureCelebrateNote(el, g, groupKey);
     } else if(g.answered>0){
       statusEl.className = "group-status group-status-partial";
@@ -753,7 +803,11 @@ if(DATA.exercises){
 } else {
   assembleSingleCasePage();
 }
+renderPageTrophies();
 restoreOpenState();
+// restoreOpenState can flip a group's open/closed state after its celebrate-note was already
+// positioned during the initial build, so every group needs one settling pass here.
+Object.values(groupEls).forEach(repositionCelebrateNote);
 
 // The right-edge fade on rule tables is a "there's more, scroll me" hint -- only show it
 // when the table actually overflows its container, not on every screen size.
@@ -764,6 +818,7 @@ function updateTableScrollAffordances(){
 }
 updateTableScrollAffordances();
 window.addEventListener("resize", updateTableScrollAffordances);
-document.addEventListener("toggle", ()=>{
+document.addEventListener("toggle", (e)=>{
+  if(e.target && e.target.tagName==="DETAILS") repositionCelebrateNote(e.target);
   requestAnimationFrame(updateTableScrollAffordances);
 }, true);
