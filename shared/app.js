@@ -340,17 +340,20 @@ function spawnConfetti(el){
   const colors = ["#0057B7","#FFD700","#D4A24C","#F2EEE3"];
   const wrap = document.createElement("div");
   wrap.className = "confetti-burst";
-  for(let i=0;i<14;i++){
+  for(let i=0;i<20;i++){
     const piece = document.createElement("span");
-    piece.className = "confetti-piece";
-    piece.style.left = (Math.random()*94+3)+"%";
+    // Wider spread than the note itself, plus outward drift (--dx) during the fall, so the
+    // burst visibly escapes the note's own box rather than staying confined to its width.
+    piece.className = "confetti-piece"+(i%3===0 ? " confetti-round" : "");
+    piece.style.left = (Math.random()*100)+"%";
     piece.style.background = colors[i % colors.length];
     piece.style.animationDelay = (Math.random()*0.25)+"s";
-    piece.style.setProperty("--rot", (Math.random()*360-180)+"deg");
+    piece.style.setProperty("--rot", (Math.random()*480-240)+"deg");
+    piece.style.setProperty("--dx", (Math.random()*220-110)+"px");
     wrap.appendChild(piece);
   }
   el.appendChild(wrap);
-  setTimeout(()=>wrap.remove(), 1500);
+  setTimeout(()=>wrap.remove(), 1800);
 }
 
 // The reward/roast box (and its Reset button) is the only sign a completed exercise gives once
