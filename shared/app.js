@@ -19,6 +19,27 @@ function saveAnswer(id, data){
 
 let total=0, answered=0, correctCount=0;
 
+// Remembers which <details data-state-key="..."> sections were open across a reset-triggered
+// reload, so resetting one exercise doesn't collapse the whole page back to closed. Only used
+// around reset actions, not on ordinary navigation/refresh.
+const OPEN_STATE_KEY = STORAGE_KEY+"_openstate";
+
+function saveOpenState(){
+  const openKeys=[...document.querySelectorAll("details[data-state-key]")].filter(d=>d.open).map(d=>d.dataset.stateKey);
+  try{ sessionStorage.setItem(OPEN_STATE_KEY, JSON.stringify(openKeys)); }catch(e){}
+}
+
+function restoreOpenState(){
+  let openKeys=[];
+  try{ openKeys=JSON.parse(sessionStorage.getItem(OPEN_STATE_KEY)||"[]"); }catch(e){}
+  if(!openKeys.length) return;
+  openKeys.forEach(key=>{
+    const el=document.querySelector('details[data-state-key="'+CSS.escape(key)+'"]');
+    if(el) el.open=true;
+  });
+  try{ sessionStorage.removeItem(OPEN_STATE_KEY); }catch(e){}
+}
+
 function updateProgress(){
   document.getElementById("ansCount").textContent=answered;
   document.getElementById("corrCount").textContent=correctCount;
@@ -96,11 +117,13 @@ function resetGroup(groupKey){
     if(k===groupKey || k.startsWith(prefix)) delete STORE[k];
   });
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STORE)); }catch(e){}
+  saveOpenState();
   location.reload();
 }
 
 document.getElementById("resetBtn").addEventListener("click",()=>{
   try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  try{ sessionStorage.removeItem(OPEN_STATE_KEY); }catch(e){}
   location.reload();
 });
 
@@ -333,12 +356,14 @@ function buildWrapper(wrapperTitleHtml, wrapperDesc, exercises, idPrefix, itemBu
   top.innerHTML=`<summary>${wrapperTitleHtml}<span class="group-status"></span></summary><div class="body"><p class="section-desc">${wrapperDesc}</p>${extraHtml||""}</div>`;
   const body=top.querySelector(".body");
   const wrapperKey=idPrefix;
+  top.dataset.stateKey="wrap_"+wrapperKey;
   wrapperEls[wrapperKey]=top;
   wrapperGroups[wrapperKey]=[];
   exercises.forEach((ex,ei)=>{
     const sub=document.createElement("details"); sub.className="subtest";
     sub.innerHTML=`<summary>${ex.title}<span class="group-status"></span></summary><div class="body"></div>`;
     const groupKey=idPrefix+"_"+ei;
+    sub.dataset.stateKey="grp_"+groupKey;
     groupEls[groupKey]=sub;
     initGroup(groupKey, ex.items.length, wrapperKey);
     const subBody=sub.querySelector(".body");
@@ -488,6 +513,7 @@ function assembleComboPage(){
     const top=document.createElement("details"); top.className="top-details";
     top.innerHTML=`<summary>${ex.title}<span class="group-status"></span></summary><div class="body"></div>`;
     const groupKey="m_"+ei;
+    top.dataset.stateKey="grp_"+groupKey;
     groupEls[groupKey]=top;
     initGroup(groupKey, ex.items.length, null);
     const body=top.querySelector(".body");
@@ -510,6 +536,7 @@ if(DATA.exercises){
 } else {
   assembleSingleCasePage();
 }
+restoreOpenState();
 
 // The right-edge fade on rule tables is a "there's more, scroll me" hint -- only show it
 // when the table actually overflows its container, not on every screen size.
