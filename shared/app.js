@@ -366,7 +366,7 @@ function updateGroupUI(groupKey){
       wireGroupReset(statusEl, groupKey);
     } else {
       statusEl.className = "group-status group-status-empty";
-      statusEl.textContent = `Готові почати? · Ready to start?`;
+      statusEl.textContent = `Готові почати? Натисни сюди! · Ready to start? Click here!`;
     }
   }
   const wrapperKey = groupWrapperMap[groupKey];
