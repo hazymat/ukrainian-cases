@@ -355,11 +355,12 @@ function spawnConfetti(el){
     piece.style.animationDuration = (2.1+Math.random()*0.7)+"s";
     piece.style.animationDelay = (Math.random()*0.25)+"s";
     piece.style.setProperty("--rot", (Math.random()*480-240)+"deg");
-    // A fountain-like poof: pieces left of centre drift further left, pieces right of centre
-    // drift further right, always outward and scaled to the box's own width, so the burst
-    // spreads out of the results box rather than chasing the browser window's edges.
-    const dir = leftPct < 50 ? -1 : 1;
-    const dx = dir * rect.width * (0.35 + Math.random()*0.4);
+    // A fountain-like poof: drift is proportional to how far a piece already spawned from the
+    // centre (a piece near the middle barely moves, one near an edge travels further outward),
+    // so the spread fans out continuously instead of splitting into two piles either side of
+    // an empty middle. A little jitter on top keeps it from looking too evenly graduated.
+    const centreOffset = (leftPct-50)/50;
+    const dx = centreOffset*rect.width*(0.4+Math.random()*0.3) + (Math.random()*70-35);
     piece.style.setProperty("--dx", dx+"px");
     wrap.appendChild(piece);
   }
