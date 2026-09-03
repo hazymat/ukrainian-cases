@@ -282,14 +282,38 @@ function renderPageTrophies(){
     .filter(k=>k.endsWith("_rw"))
     .map(k=>STORE[k])
     .filter(a=>a && REWARD_TIERS[a.tier] && REWARD_TIERS[a.tier][a.idx]);
+  const seeAllLink = `<a class="trophy-box-link" href="trophy.html">Побачити всі трофеї <span class="en">See all your trophies</span></a>`;
   if(!earned.length){
-    body.innerHTML = `<p class="trophy-box-empty">${emojify("⏳")}<span>Тут з'являться твої трофеї за ${label.uk}!<span class="en">Your trophies for ${label.en} will show here!</span></span></p>`;
+    // Three greyed-out placeholder slots, so the empty box still reads as "trophies collect
+    // here" rather than just blank space.
+    const placeholders = Array(3).fill(`<span class="trophy-box-icon trophy-box-icon-placeholder">${emojify("⏳")}</span>`).join("");
+    body.innerHTML = `<div class="trophy-box-icons">${placeholders}</div><p class="trophy-box-empty">Виконай вправу, щоб отримати свій перший трофей!<span class="en">Complete an exercise to acquire your first trophy!</span></p>${seeAllLink}`;
     return;
   }
-  body.innerHTML = earned.map(a=>{
+  const icons = earned.map((a,i)=>{
     const reward = REWARD_TIERS[a.tier][a.idx];
-    return `<span class="trophy-box-icon">${emojify(reward.emoji)}</span>`;
+    return `<button type="button" class="trophy-box-icon" data-idx="${i}">${emojify(reward.emoji)}</button>`;
   }).join("");
+  body.innerHTML = `<div class="trophy-box-icons">${icons}</div><div class="trophy-box-detail" hidden></div>${seeAllLink}`;
+  const detailEl = body.querySelector(".trophy-box-detail");
+  const iconEls = [...body.querySelectorAll(".trophy-box-icon")];
+  // Accordion, not a toggle-per-icon: clicking one shows its text and closes whichever other
+  // icon was open; clicking the currently-open one closes it.
+  iconEls.forEach((btn,i)=>{
+    btn.addEventListener("click", ()=>{
+      const wasActive = btn.classList.contains("is-active");
+      iconEls.forEach(b=>b.classList.remove("is-active"));
+      if(wasActive){
+        detailEl.hidden = true;
+        detailEl.innerHTML = "";
+        return;
+      }
+      btn.classList.add("is-active");
+      const reward = REWARD_TIERS[earned[i].tier][earned[i].idx];
+      detailEl.hidden = false;
+      detailEl.innerHTML = `${reward.uk}<span class="en">${wrapUkWords(reward.en)}</span>`;
+    });
+  });
 }
 
 function celebrateGroup(groupKey){
@@ -358,7 +382,12 @@ function updateWrapperUI(wrapperKey){
   const completeCount = groups.filter(gk=>{
     const g=groupTally[gk]; return g && g.total>0 && g.answered>=g.total;
   }).length;
-  statusEl.textContent = `${completeCount}/${groups.length} вправи виконано · ${completeCount}/${groups.length} exercises complete`;
+  const anyStarted = groups.some(gk=>{
+    const g=groupTally[gk]; return g && g.answered>0;
+  });
+  statusEl.innerHTML = anyStarted
+    ? `${emojify("⏳")}<span>${completeCount}/${groups.length} вправи виконано · ${completeCount}/${groups.length} exercises complete</span>`
+    : `Готові почати? Натисни сюди! · Ready to start? Click here!`;
 }
 
 function resetGroup(groupKey){
