@@ -105,7 +105,7 @@ details:not([open])>*:not(summary){display:none!important}
 .celebrate-reset:hover{color:#D4A24C}
 .score-badge{display:inline-block;background:#233A63;border:1px solid #37507F;color:#F2EEE3;font-weight:700;font-size:0.8rem;padding:2px 9px;border-radius:999px;font-variant-numeric:tabular-nums}
 .record-badge{display:inline-flex;align-items:center;gap:6px;color:#D4A24C;font-weight:700;font-size:0.82rem}
-.record-badge .en{color:#D4A24C;font-style:italic;font-weight:400;margin-left:4px}
+.record-badge .en{color:#9FB0CC;font-style:italic;font-weight:400;margin-left:4px}
 .celebrate-emoji{font-size:1.3rem;flex-shrink:0;display:inline-flex;align-items:center;gap:2px}
 .emoji-img{width:1em;height:1em;vertical-align:-0.15em}
 .flag-img{width:1.4em;height:auto;border-radius:3px;display:inline-block}
@@ -135,14 +135,14 @@ details:not([open])>*:not(summary){display:none!important}
 .subtest{background:#1E2F52;border:1px solid #37507F;border-radius:8px;margin-bottom:14px}
 .subtest summary{padding:14px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
 .subtest summary .bi-title-uk{font-size:1rem;color:#F2EEE3}
-.subtest summary .bi-title-en{font-size:1rem;color:#D4A24C;font-style:normal;font-weight:400}
+.subtest summary .bi-title-en{font-size:1rem;color:#9FB0CC;font-style:italic;font-weight:400}
 .subtest .body{padding:0 16px 16px}
 .subtest .desc{color:#9FB0CC;font-size:0.88rem;margin:0 0 14px}
 
 .q{background:#24365C;border:1px solid #37507F;border-radius:10px;padding:18px 20px;margin-bottom:14px}
 .q.q-skipped{background:rgba(212,162,76,0.1);border-color:rgba(212,162,76,0.55)}
 .skip-tag{display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:8px 12px;background:rgba(212,162,76,0.15);border:1px solid rgba(212,162,76,0.4);border-radius:8px;color:#D4A24C;font-size:0.85rem;font-weight:600}
-.skip-tag .en{color:#D4A24C;font-style:italic;font-weight:400;margin-left:4px}
+.skip-tag .en{color:#9FB0CC;font-style:italic;font-weight:400;margin-left:4px}
 mark{background:rgba(212,162,76,0.28);color:#F2D9A8;padding:0 3px;border-radius:3px;font-style:normal}
 
 .word-click-wrap{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px;align-items:center}
@@ -245,7 +245,7 @@ footer{text-align:center;color:#9FB0CC;font-size:0.85rem;margin-top:60px}
   text-decoration:none;transition:border-color .15s}
 .case-card:hover{border-color:#D4A24C}
 .case-card .case-uk{display:block;font-family:'PT Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-weight:700;font-size:1.15rem;color:#F2EEE3}
-.case-card .case-en{display:block;font-family:'PT Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-style:italic;color:#D4A24C;font-size:0.9rem;margin:2px 0 8px}
+.case-card .case-en{display:block;font-family:'PT Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-style:italic;color:#9FB0CC;font-size:0.9rem;margin:2px 0 8px}
 .case-card .case-desc{color:#9FB0CC;font-size:0.88rem;margin:0}
 .case-card.disabled{cursor:default;opacity:.55}
 .case-card.disabled:hover{border-color:#37507F}
