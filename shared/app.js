@@ -82,23 +82,152 @@ function recordGroupAnswer(id, isCorrect){
   if(justCompleted) celebrateGroup(groupKey);
 }
 
-// One themed message per possible score out of 10, shown as a permanent little note under
-// the exercise once it's complete (score 0-2 share a message; 10 is the one-off flourish).
-const CELEBRATIONS = [
-  {emoji:"😢🍲", text:`До ліжка, без борщу для тебе! <span class="en">Straight to bed, no borscht for you!</span>`},
-  {emoji:"😢🍲", text:`До ліжка, без борщу для тебе! <span class="en">Straight to bed, no borscht for you!</span>`},
-  {emoji:"😢🍲", text:`До ліжка, без борщу для тебе! <span class="en">Straight to bed, no borscht for you!</span>`},
-  {emoji:"🍞", text:`Черствий хліб. <span class="en">Stale bread. Try again!</span>`},
-  {emoji:"🥒", text:`Пів огірка. <span class="en">Half a cucumber. Respectable-ish, continue!</span>`},
-  {emoji:"🥣", text:`Тарілка каші. <span class="en">Bowl of kasha. Right down the middle, непогано!</span>`},
-  {emoji:"🥟", text:`Жменя вареників. <span class="en">A handful of dumplings. Smells like progress!</span>`},
-  {emoji:"🥓", text:`Шматочок сала. <span class="en">A slice of bacon fat. The taste of victory.</span>`},
-  {emoji:"🍯", text:`Баночка меду. <span class="en">A jar of honey. Sweet result!</span>`},
-  {emoji:"🌻", text:`Соняшникове насіння. <span class="en">One sunflower seed. So close!</span>`},
-  {emoji:"🇺🇦🎆", text:`Українське громадянство видано! <span class="en">Ukrainian citizenship: granted!</span>`}
-];
+// Reward pools: a themed Ukrainian-dish/culture note shown as a permanent little card under
+// the exercise once it's complete. Scores 0-6 roast (mock-stern but affectionate); 7-10 are
+// warm/proud. Each entry is {emoji, uk, en}; Cyrillic words left untranslated inside the English
+// line (borsch, вареники, etc.) are auto-wrapped in .uk-word so they render upright, never italic.
+const REWARD_TIERS = {
+  t0: [ // 0-2/10
+    {emoji:"😭🍲", uk:"Борщ треба варити щонайменше три години. У тебе стільки часу не знайшлось, і це видно.", en:"Борщ needs at least three hours on the stove before it's any good. You clearly didn't put the time in, and it shows."},
+    {emoji:"😤🥟", uk:"Справжні вареники защипують руками, дбайливо. Твої розвалились у каструлі.", en:"Real вареники are pinched shut by hand, with care. Yours came apart in the pot."},
+    {emoji:"😑🧊", uk:"Холодець застигає цілу ніч у холодильнику. Твої знання, здається, взагалі не застигли.", en:"Холодець sets overnight in the fridge. Your knowledge, it seems, hasn't set at all."},
+    {emoji:"😩🥖", uk:"Пампушки подають гарячими, щойно з печі. Ці відповіді холодні й давно перегорілі.", en:"Пампушки are served hot, straight from the oven. These answers are cold, and long since burnt out."},
+    {emoji:"😤🔪", uk:"Сало ріжуть тонкими скибками, з повагою. Тебе б порізали ще тонше.", en:"Сало is sliced thin, with respect. You'd be sliced even thinner."},
+    {emoji:"😭🍂", uk:"Узвар вариться з сухофруктів роками перевіреним рецептом. Твій рецепт сьогодні не спрацював.", en:"Узвар is brewed from dried fruit, a recipe tested for generations. Yours didn't work today."},
+    {emoji:"🙄🥬", uk:"Квашену капусту тримають місяцями, поки вона не набуде смаку. Тобі бракує і смаку, і часу.", en:"Квашена капуста sits for months before it develops flavour. You're short on both flavour and time."},
+    {emoji:"😑🥣", uk:"Гречку не можна пересолити двічі. А от твої відповіді можна було й краще присолити.", en:"You can't oversalt гречка twice. Your answers, though, could've used more seasoning."},
+    {emoji:"😤🥔", uk:"Деруни без сметани це просто картопля, що вдає із себе страву. Твій результат так само вдає.", en:"Деруни without smetana are just potatoes putting on airs. Your score is doing the same."},
+    {emoji:"😭✨", uk:"Кутю готують раз на рік, на Святвечір, з великою любов'ю. Цю спробу так не готували.", en:"Кутя is made once a year, on Christmas Eve, with great care. This attempt clearly wasn't."},
+    {emoji:"🙄🫙", uk:"Солоні огірки набирають смаку в розсолі щонайменше тиждень. Твої відповіді розчинились одразу.", en:"Pickled cucumbers need at least a week in the brine to taste right. Your answers dissolved instantly."},
+    {emoji:"😩🎃", uk:"Гарбузову кашу варять на повільному вогні. Тобі теж варто трохи повільніше.", en:"Гарбузова каша is cooked low and slow. You might want to slow down too."}
+  ],
+  t1: [ // 3-4/10
+    {emoji:"🥔", uk:"Деруни смажать до золотистого з обох боків. Твої підрум'янились лише з одного.", en:"Деруни get fried until golden on both sides. Yours only browned on one."},
+    {emoji:"🧀", uk:"Сирники перевертають обережно, щоб не розвалились. Половина твоїх відповідей не втрималась.", en:"Сирники are flipped carefully so they don't fall apart. Half your answers didn't hold together."},
+    {emoji:"🥨", uk:"Вергуни смажать до хрумкості за лічені хвилини. Тобі знадобилось трохи більше часу.", en:"Вергуни fry crisp in just a few minutes. You needed a little longer."},
+    {emoji:"🥯", uk:"Книші ліплять із начинкою всередині. У твоїх відповідях начинки поки що мало.", en:"Книші are shaped with filling tucked inside. Your answers are still a bit light on filling."},
+    {emoji:"🍘", uk:"Гречаники печуть невеликими, щоб пропеклися рівномірно. Ти пропікся нерівно.", en:"Гречаники are baked small so they cook evenly. You cooked a bit unevenly."},
+    {emoji:"🌯", uk:"Налисники загортають тонким млинцем, акуратно. У тебе вийшло трохи неохайно.", en:"Налисники are wrapped in a thin crepe, neatly. Yours came out a little messy."},
+    {emoji:"🧄", uk:"Часникові пампушки подають до борщу, обов'язково. Ти забув про половину рецепта.", en:"Часникові пампушки go with борщ, no exceptions. You forgot about half the recipe."},
+    {emoji:"🧵", uk:"Крученики фарширують і перев'язують нитками. Пара ниток у тебе розв'язалась.", en:"Крученики are stuffed and tied with thread. A couple of your threads came undone."},
+    {emoji:"🍎", uk:"Яблучний пиріг проситься на друге коло. Тобі теж не завадило б друге коло.", en:"Яблучний пиріг always calls for seconds. You could do with a second round too."},
+    {emoji:"🌽", uk:"Банош готують, безперервно помішуючи. Ти, здається, забув про половину помішувань.", en:"Банош needs constant stirring. You seem to have skipped half the stirring."}
+  ],
+  t2: [ // 5-6/10
+    {emoji:"🥣", uk:"Капусняк вариться довго, і смак приходить не одразу. Так само й у тебе.", en:"Капусняк needs a long simmer before the flavour comes through. Same goes for you."},
+    {emoji:"🥬", uk:"Голубці загортають один за одним, терпляче. Ти впорався рівно з половиною.", en:"Голубці are rolled one by one, patiently. You managed exactly half."},
+    {emoji:"🥖", uk:"Пампушки піднімаються повільно, але впевнено. Твій результат так само.", en:"Пампушки rise slowly, but surely. Your score did the same."},
+    {emoji:"🍒", uk:"Вареники з вишнями варять окремо від картопляних, щоб не переплутати смаки. У тебе трохи переплуталось.", en:"Cherry вареники are cooked separately from potato ones, so the flavours don't mix. Yours mixed a little."},
+    {emoji:"🍳", uk:"Сирники виходять рум'яними, коли сковорідка як слід розігріта. Твоя, здається, була ледь тепла.", en:"Сирники turn out golden when the pan is properly hot. Yours seems to have been lukewarm."},
+    {emoji:"🍰", uk:"Медовик потребує часу, щоб коржі просякли кремом. Твоїм відповідям теж треба ще трохи часу.", en:"Медовик needs time for the layers to soak through with cream. Your answers need a bit more time too."},
+    {emoji:"🥔", uk:"Деруни зі сметаною це вже пристойна страва. Пристойний результат, тримайся.", en:"Деруни with smetana make a decent meal. A decent result, keep going."},
+    {emoji:"🧊", uk:"Холодець любить точні пропорції желатину. Твої пропорції були приблизно вірні.", en:"Холодець needs the gelatin ratio just right. Yours was roughly right."},
+    {emoji:"🍂", uk:"Узвар настоюється ніч, а вранці смакує краще. Дай собі ще одну спробу, теж буде краще.", en:"Узвар steeps overnight and tastes better by morning. Give yourself another go, it'll taste better too."},
+    {emoji:"🍯", uk:"Кутя з медом і маком проста, але легко забути хоч один інгредієнт. Ти забув один.", en:"Кутя with honey and poppy seed is simple, but easy to forget one ingredient. You forgot one."}
+  ],
+  t3: [ // 7-8/10
+    {emoji:"🍯", uk:"Справжній медовик має дев'ять медових коржів. У тебе майже стільки ж правильних відповідей.", en:"A proper медовик has nine honey layers. You've got nearly as many correct answers."},
+    {emoji:"👵", uk:"Бабуся розповіла б усім сусідкам про такий результат.", en:"Бабуся would tell every neighbour about a result like that."},
+    {emoji:"🥬", uk:"Рівно й акуратно загорнуті голубці свідчать про впевнену руку кухаря. У тебе саме така рука.", en:"Голубці rolled neat and even are the mark of a steady hand. You've got a steady hand."},
+    {emoji:"🍲", uk:"Мама б додала тобі другу тарілку борщу за такий результат.", en:"Your mama would give you a second bowl of борщ for a result like that."},
+    {emoji:"🍞", uk:"Паску пекли лише раз на рік і завжди боялись, що не підніметься. Твоя піднялась чудово.", en:"Паска was only ever baked once a year, and everyone worried it wouldn't rise. Yours rose beautifully."},
+    {emoji:"🍽️", uk:"Крученики, які тримають форму до кінця варіння, це знак майстерності. Твоя форма трималась.", en:"Крученики that hold their shape right through cooking are a sign of real skill. Yours held up."},
+    {emoji:"🏡", uk:"Сусідка запитала б рецепт після такого результату.", en:"The neighbour would be asking for the recipe after a result like that."},
+    {emoji:"🥃", uk:"Дідусь налив би тобі чарку узвару в знак поваги. Ну, майже повну чарку.", en:"Дідусь would pour you a glass of узвар out of respect for that. Well, almost a full one."},
+    {emoji:"🍘", uk:"Гречаники, пропечені рівно з усіх боків, це рідкість навіть у досвідчених кухарів. У тебе вийшло.", en:"Гречаники baked evenly on every side are rare even for experienced cooks. You managed it."},
+    {emoji:"🎉", uk:"Такий результат вартий місця за святковим столом.", en:"A result like that earns you a seat at the holiday table."}
+  ],
+  t4: [ // 9/10
+    {emoji:"🥚", uk:"Великодній кошик тримає дюжину писанок. Тобі бракує лише однієї, це вже майже повний кошик!", en:"An Easter basket holds a dozen писанки. You're only one short, and that's basically a full basket!"},
+    {emoji:"🧵", uk:"Вишиванку вишивають сотнями стібків. Тобі не вистачило лише одного, щоб вважати її довершеною.", en:"A вишиванка is stitched with hundreds of threads. You're just one stitch from calling it finished."},
+    {emoji:"🍞", uk:"Коровай печуть цілою родиною. Тобі бракує лише однієї пари рук, і майже готово.", en:"A коровай is baked by the whole family. You're just one pair of hands short, and nearly there."},
+    {emoji:"🌻", uk:"Соняшникове поле цвіте майже суцільно жовтим. Твоє поле теж, лишилась одна пелюстка.", en:"A sunflower field blooms almost entirely yellow. So does yours, just one petal left."},
+    {emoji:"🧵", uk:"Рушник вишивають з обох країв, симетрично. Твій симетричний майже повністю.", en:"A рушник is embroidered from both ends, symmetrically. Yours is nearly there."},
+    {emoji:"🥟", uk:"Дюжина вареників на тарілці означає гостину. У тебе одинадцять, і це теж гостина.", en:"A dozen вареники on a plate means a proper spread. You've got eleven, and that still counts."},
+    {emoji:"🍯", uk:"Мед у банці майже по вінця, бджоли попрацювали на славу. Твоя банка теж майже повна.", en:"Honey filled almost to the brim, the bees did well. Your jar's nearly full too."},
+    {emoji:"🥚", uk:"Писанку розписують воском у кілька шарів, і один пропущений шар усе одно лишає її гарною. Твоя гарна.", en:"A писанка is waxed in several layers, and missing just one still leaves it beautiful. Yours is beautiful."},
+    {emoji:"🍎", uk:"Кошик з яблуками для родини набирають з верхом. Твій кошик майже з верхом.", en:"A family's apple basket gets filled right to the top. Yours is nearly there too."},
+    {emoji:"🇺🇦", uk:"Прапор має два кольори, рівні між собою. Твій результат майже такий же рівний.", en:"The flag has two colours, equal in size. Your score is almost as balanced."}
+  ],
+  t5: [ // 10/10, one-off
+    {emoji:"🇺🇦", uk:"Прапор піднято, вареники подано, громадянство видано. Десять з десяти!", en:"Flag raised, вареники served, citizenship granted. Ten out of ten!"},
+    {emoji:"👵", uk:"Бабуся розповіла б усім сусідкам, і не тільки їм.", en:"Бабуся would tell every neighbour, and then some."},
+    {emoji:"👕", uk:"Вишиванку тобі, по заслузі.", en:"A вишиванка for you, well earned."},
+    {emoji:"🌻", uk:"Соняшникове поле повертається й дивиться прямо на тебе.", en:"A whole field of sunflowers turns to face only you."},
+    {emoji:"🥚", uk:"Десяток яєць, жодного розбитого.", en:"A full десяток of eggs, not one cracked."},
+    {emoji:"🍰", uk:"Медовик у дев'ять коржів, і кожен вдався.", en:"A медовик with nine layers, and every single one came out right."},
+    {emoji:"🍞", uk:"Коровай спекли на твою честь, і він піднявся як слід.", en:"A коровай baked in your honour, and it rose just right."},
+    {emoji:"🥚", uk:"Писанку розписали найтоншим воском, спеціально для тебе.", en:"A писанка painted with the finest wax, just for you."},
+    {emoji:"🧵", uk:"Рушник вишили від краю до краю, без жодного пропущеного стібка.", en:"A рушник embroidered edge to edge, without a single missed stitch."},
+    {emoji:"🥃", uk:"Дідусь дістав би найкращу чарку узвару з буфета.", en:"Дідусь would pull out the good узвар glass from the cupboard for this."},
+    {emoji:"🥬", uk:"Голубці загорнуті так рівно, що жоден не розвалився за весь обід.", en:"Голубці rolled so neatly, not one fell apart the whole meal."},
+    {emoji:"✨", uk:"Кутя вийшла солодкою рівно настільки, наскільки треба, з першої спроби.", en:"Кутя came out exactly the right sweetness, first try."},
+    {emoji:"🍞", uk:"Паска піднялась вище за всі інші на підвіконні.", en:"Паска rose taller than every other loaf on the windowsill."},
+    {emoji:"🏆", uk:"Сало нарізали найтоншими, найохайнішими скибками, спеціально для переможця.", en:"Сало cut into the thinnest, neatest slices, just for the winner."},
+    {emoji:"🍂", uk:"Узвар настоявся рівно стільки, скільки треба, ні хвилиною менше.", en:"Узвар steeped exactly as long as it should, not a minute less."},
+    {emoji:"🍽️", uk:"Крученики трималися купи навіть після третьої тарілки.", en:"Крученики held together even after a third helping."},
+    {emoji:"📷", uk:"Мама поставила б твою фотографію на холодильник.", en:"Your mama would put your photo on the fridge for this."},
+    {emoji:"🥔", uk:"Сусідка приходила б саме заради твоїх дерунів.", en:"The neighbour would start showing up just for your деруни."},
+    {emoji:"🍘", uk:"Гречаники з першої партії, жоден не пригорів.", en:"Гречаники straight off the first batch, not one burnt."},
+    {emoji:"🥯", uk:"Книші такі пухкі, що аж не вірилось, що вони твої.", en:"Книші so fluffy, no one would believe you made them."},
+    {emoji:"🥨", uk:"Вергуни вийшли хрумкими настільки, що чути було з іншої кімнати.", en:"Вергуни so crisp you could hear them from the next room."},
+    {emoji:"🧄", uk:"Часникові пампушки розлетілися ще до того, як борщ поставили на стіл.", en:"Часникові пампушки disappeared before the борщ even hit the table."},
+    {emoji:"🧊", uk:"Холодець застиг ідеально рівним шаром, без жодної бульбашки.", en:"Холодець set in one perfectly smooth layer, not a bubble in sight."},
+    {emoji:"🍯", uk:"Медова баночка спорожніла тільки тому, що всі просили добавки.", en:"The honey jar only emptied because everyone kept asking for more."},
+    {emoji:"🌻", uk:"Соняшникове насіння підсмажили окремо, спеціально для тебе, у знак поваги.", en:"Sunflower seeds roasted specially for you, as a mark of respect."},
+    {emoji:"🥟", uk:"Дюжина вареників зникла з тарілки за хвилину, і всі хвалили кухаря.", en:"A dozen вареники vanished off the plate in a minute, and everyone praised the cook."},
+    {emoji:"🇺🇦", uk:"Прапор майорить рівно, без жодного пориву вітру проти.", en:"The flag flies straight, with not a gust of wind against it."},
+    {emoji:"🍎", uk:"Кошик з яблуками наповнили з горою, для тебе окремо.", en:"A basket of apples piled high, just for you."},
+    {emoji:"🎃", uk:"Гарбузова каша вийшла такою, що навіть найвибагливіший дідусь попросив добавки.", en:"Гарбузова каша turned out so good even the fussiest дідусь asked for seconds."},
+    {emoji:"🏆", uk:"Десять з десяти. Хтось точно розповість бабусі.", en:"Ten out of ten. Someone's definitely telling бабуся."}
+  ]
+};
 
-function ensureCelebrateNote(el, g){
+function tierKeyForScore(score){
+  if(score<=2) return "t0";
+  if(score<=4) return "t1";
+  if(score<=6) return "t2";
+  if(score<=8) return "t3";
+  if(score===9) return "t4";
+  return "t5";
+}
+
+// Site-wide "shuffle bag": every tier's pool is dealt out in a shuffled order, one entry at a
+// time, and only reshuffled (avoiding an immediate repeat of the last card) once the whole pool
+// has been seen. Shared across every page, in its own localStorage key (not the page's STORAGE_KEY),
+// so variety carries across the whole site rather than resetting per page.
+const REWARD_BAG_KEY = "uk_cases_reward_bag_v1";
+
+function drawReward(tierKey){
+  const pool = REWARD_TIERS[tierKey];
+  let bag = {};
+  try{ bag = JSON.parse(localStorage.getItem(REWARD_BAG_KEY) || "{}"); }catch(e){ bag = {}; }
+  let state = bag[tierKey];
+  if(!state || !state.queue || !state.queue.length){
+    const queue = pool.map((_,i)=>i);
+    for(let i=queue.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [queue[i],queue[j]]=[queue[j],queue[i]];
+    }
+    if(state && state.last!==undefined && queue.length>1 && queue[0]===state.last){
+      [queue[0],queue[1]]=[queue[1],queue[0]];
+    }
+    state = {queue, last: state ? state.last : undefined};
+  }
+  const idx = state.queue.shift();
+  state.last = idx;
+  bag[tierKey] = state;
+  try{ localStorage.setItem(REWARD_BAG_KEY, JSON.stringify(bag)); }catch(e){}
+  return idx;
+}
+
+// Wraps bare Cyrillic words/phrases in an English sentence so they render upright (never
+// italic), per house style, even though the surrounding English gloss is italic.
+function wrapUkWords(en){
+  return en.replace(/[Ѐ-ӿ]+/g, m => `<span class="uk-word">${m}</span>`);
+}
+
+function ensureCelebrateNote(el, g, groupKey){
   const body = el.querySelector(":scope > .body");
   if(!body) return;
   let note = body.querySelector(".celebrate-note");
@@ -107,8 +236,16 @@ function ensureCelebrateNote(el, g){
     note.className = "celebrate-note";
     body.appendChild(note);
   }
-  const c = CELEBRATIONS[Math.max(0, Math.min(10, g.correct))];
-  note.innerHTML = `<span class="celebrate-emoji">${c.emoji}</span><span class="celebrate-text">${c.text}</span>`;
+  const tierKey = tierKeyForScore(Math.max(0, Math.min(10, g.correct)));
+  const rwKey = groupKey+"_rw";
+  let assigned = STORE[rwKey];
+  if(!assigned || assigned.tier!==tierKey){
+    assigned = {tier: tierKey, idx: drawReward(tierKey)};
+    STORE[rwKey] = assigned;
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STORE)); }catch(e){}
+  }
+  const reward = REWARD_TIERS[assigned.tier][assigned.idx];
+  note.innerHTML = `<span class="celebrate-emoji">${reward.emoji}</span><span class="celebrate-text">${reward.uk}<span class="en">${wrapUkWords(reward.en)}</span></span>`;
 }
 
 function celebrateGroup(groupKey){
@@ -138,7 +275,7 @@ function updateGroupUI(groupKey){
       statusEl.className = "group-status group-status-complete";
       statusEl.innerHTML = `<span class="group-check">✅</span><span>Завершено · Complete. ${g.correct}/${g.total} правильно / correct.</span><button type="button" class="group-reset">Скинути / Reset</button>`;
       wireGroupReset(statusEl, groupKey);
-      ensureCelebrateNote(el, g);
+      ensureCelebrateNote(el, g, groupKey);
     } else if(g.answered>0){
       statusEl.className = "group-status group-status-partial";
       statusEl.innerHTML = `<span>⏳ Відповідано ${g.answered} / ${g.total}.</span><button type="button" class="group-reset">Скинути / Reset</button>`;
