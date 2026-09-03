@@ -73,6 +73,8 @@ details:not([open])>*:not(summary){display:none!important}
 .celebrate-note{display:flex;flex-direction:column;gap:8px;margin-top:14px;padding:10px 14px;background:rgba(76,154,106,0.12);border:1px solid rgba(76,154,106,0.4);border-radius:8px}
 .celebrate-note[hidden]{display:none}
 .celebrate-row{display:flex;align-items:center;gap:10px}
+.celebrate-tags{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.score-badge{display:inline-block;background:#233A63;border:1px solid #37507F;color:#F2EEE3;font-weight:700;font-size:0.8rem;padding:2px 9px;border-radius:999px;font-variant-numeric:tabular-nums}
 .record-badge{display:inline-flex;align-items:center;gap:6px;color:#D4A24C;font-weight:700;font-size:0.82rem}
 .record-badge .en{color:#D4A24C;font-style:italic;font-weight:400;margin-left:4px}
 .celebrate-emoji{font-size:1.3rem;flex-shrink:0;display:inline-flex;align-items:center;gap:2px}

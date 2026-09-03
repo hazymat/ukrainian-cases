@@ -201,21 +201,27 @@ function ensureCelebrateNote(el, g, groupKey){
   if(!assigned || assigned.tier!==tierKey){
     assigned = {tier: tierKey, idx: drawReward(tierKey)};
     STORE[rwKey] = assigned;
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STORE)); }catch(e){}
   }
+  // Always keep the exact score on the stored assignment (also lets trophy.html show it later);
+  // refreshed every render, not just on a fresh draw, so older saved entries pick it up too.
+  assigned.correct = correct;
+  assigned.total = g.total;
+  STORE[rwKey] = assigned;
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STORE)); }catch(e){}
   const reward = REWARD_TIERS[assigned.tier][assigned.idx];
-  // Every tier except the 10/10 one-off pool gets a "N/total. Exclamation!" lead-in ahead of the
-  // themed line, so the actual score is always legible and every reward opens with a verdict.
-  // The 10/10 pool already opens each of its own lines with its own score/exclamation, so no
-  // prefix is added there.
-  const uk = tierKey==="t5" ? reward.uk : `${correct}/${g.total}. ${TIER_LEADS[tierKey].uk} ${reward.uk}`;
-  const en = tierKey==="t5" ? reward.en : `${correct}/${g.total}. ${TIER_LEADS[tierKey].en} ${reward.en}`;
+  // The score is always its own badge, never relied on being baked into the reward text --
+  // some lines (especially in the 10/10 pool) never state the number at all, so text-only
+  // scoring silently failed to show a mark on those. Tiers below 10/10 still get a short verdict
+  // word next to the badge, for flavour, but the number itself lives only in the badge now.
+  const uk = tierKey==="t5" ? reward.uk : `${TIER_LEADS[tierKey].uk} ${reward.uk}`;
+  const en = tierKey==="t5" ? reward.en : `${TIER_LEADS[tierKey].en} ${reward.en}`;
   const isRecord = !!STORE[groupKey+"_rec"];
+  const scoreBadge = `<span class="score-badge">${correct}/${g.total}</span>`;
   const recordBadge = isRecord
     ? `<span class="record-badge">${emojify("🏅")}<span>Новий рекорд! <span class="en">New record!</span></span></span>`
     : "";
   note.hidden = false;
-  note.innerHTML = `${recordBadge}<span class="celebrate-row"><span class="celebrate-emoji">${emojify(reward.emoji)}</span><span class="celebrate-text">${uk}<span class="en">${wrapUkWords(en)}</span></span></span>`;
+  note.innerHTML = `<span class="celebrate-tags">${scoreBadge}${recordBadge}</span><span class="celebrate-row"><span class="celebrate-emoji">${emojify(reward.emoji)}</span><span class="celebrate-text">${uk}<span class="en">${wrapUkWords(en)}</span></span></span>`;
 }
 
 function celebrateGroup(groupKey){

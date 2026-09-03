@@ -20,7 +20,8 @@
   .trophy-grid{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
   .trophy-card{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:14px 16px;background:#1E2F52;border:1px solid #37507F;border-radius:8px;align-items:start}
   .trophy-card .emoji{font-size:1.3rem;line-height:1.4}
-  .trophy-card .cat{color:#9FB0CC;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 4px}
+  .trophy-card .cat{display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:#9FB0CC;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 4px}
+  .trophy-card .score-badge{text-transform:none;letter-spacing:normal;background:#233A63;border:1px solid #37507F;color:#F2EEE3;font-weight:700;font-size:0.72rem;padding:2px 8px;border-radius:999px;font-variant-numeric:tabular-nums}
   .trophy-card .uk{font-weight:700;font-size:0.95rem;line-height:1.4;margin:0}
   .trophy-card .en{display:block;margin-top:4px;color:#9FB0CC;font-style:italic;font-size:0.85rem;line-height:1.45}
   .trophy-card .en .uk-word{font-style:normal;color:#F2EEE3}
@@ -96,6 +97,7 @@ const CATEGORY = {
   r: {uk:"Повторення", en:"Revision"},
   m: {uk:"Змішана вправа", en:"Combo drill"}
 };
+const TIER_RANGES = {t0:"0-2", t1:"3-4", t2:"5-6", t3:"7-8", t4:"9", t5:"10"};
 
 const contentEl = document.getElementById('content');
 let totalTrophies = 0;
@@ -113,7 +115,12 @@ PAGES.forEach(page=>{
       if(!pool || !pool[assigned.idx]) return null;
       const prefix = groupKey.split("_")[0];
       const isRecord = !!store[groupKey+"_rec"];
-      return {groupKey, reward: pool[assigned.idx], category: CATEGORY[prefix] || {uk:groupKey, en:groupKey}, isRecord};
+      // Entries saved before scores were persisted alongside the reward fall back to the tier's
+      // score range (e.g. "5-6/10") rather than showing nothing.
+      const scoreLabel = (assigned.correct!==undefined && assigned.total!==undefined)
+        ? `${assigned.correct}/${assigned.total}`
+        : (TIER_RANGES[assigned.tier] || "?") + "/10";
+      return {groupKey, reward: pool[assigned.idx], category: CATEGORY[prefix] || {uk:groupKey, en:groupKey}, isRecord, scoreLabel};
     })
     .filter(Boolean)
     .sort((a,b)=> a.groupKey.localeCompare(b.groupKey, undefined, {numeric:true}));
@@ -129,7 +136,7 @@ PAGES.forEach(page=>{
   trophies.forEach(t=>{
     const li = document.createElement('li');
     li.className = 'trophy-card'+(t.isRecord ? ' is-record' : '');
-    li.innerHTML = `<span class="emoji">${emojify(t.reward.emoji)}</span><span class="body"><p class="cat">${t.category.uk} · ${t.category.en}${t.isRecord ? `<span class="record-tag">${emojify("🏅")}Рекорд · Record</span>` : ''}</p><p class="uk">${t.reward.uk}</p><span class="en">${wrapUkWords(t.reward.en)}</span></span>`;
+    li.innerHTML = `<span class="emoji">${emojify(t.reward.emoji)}</span><span class="body"><p class="cat"><span class="score-badge">${t.scoreLabel}</span>${t.category.uk} · ${t.category.en}${t.isRecord ? `<span class="record-tag">${emojify("🏅")}Рекорд · Record</span>` : ''}</p><p class="uk">${t.reward.uk}</p><span class="en">${wrapUkWords(t.reward.en)}</span></span>`;
     ol.appendChild(li);
   });
   section.appendChild(ol);
