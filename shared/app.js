@@ -252,7 +252,7 @@ function ensureCelebrateNote(el, g, groupKey){
   const uk = tierKey==="t5" ? reward.uk : `${TIER_LEADS[tierKey].uk} ${reward.uk}`;
   const en = tierKey==="t5" ? reward.en : `${TIER_LEADS[tierKey].en} ${reward.en}`;
   const isRecord = !!STORE[groupKey+"_rec"];
-  const scoreBadge = `<span class="score-badge">${correct}/${g.total} правильно / correct</span>`;
+  const scoreBadge = `<span class="score-badge">${correct} / ${g.total} правильно / correct</span>`;
   const recordBadge = isRecord
     ? `<span class="record-badge">${emojify("🏅")}<span>Новий рекорд! <span class="en">New record!</span></span></span>`
     : "";
@@ -386,7 +386,7 @@ function updateWrapperUI(wrapperKey){
     const g=groupTally[gk]; return g && g.answered>0;
   });
   statusEl.innerHTML = anyStarted
-    ? `${emojify("⏳")}<span>${completeCount}/${groups.length} вправи виконано · ${completeCount}/${groups.length} exercises complete</span>`
+    ? `${emojify("⏳")}<span>${completeCount} / ${groups.length} вправи виконано · ${completeCount} / ${groups.length} exercises complete</span>`
     : `Готові почати? Натисни сюди! · Ready to start? Click here!`;
 }
 
