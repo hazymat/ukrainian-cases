@@ -111,6 +111,9 @@ details:not([open])>*:not(summary){display:none!important}
 .subtest .desc{color:#9FB0CC;font-size:0.88rem;margin:0 0 14px}
 
 .q{background:#24365C;border:1px solid #37507F;border-radius:10px;padding:18px 20px;margin-bottom:14px}
+.q.q-skipped{background:rgba(212,162,76,0.1);border-color:rgba(212,162,76,0.55)}
+.skip-tag{display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:8px 12px;background:rgba(212,162,76,0.15);border:1px solid rgba(212,162,76,0.4);border-radius:8px;color:#D4A24C;font-size:0.85rem;font-weight:600}
+.skip-tag .en{color:#D4A24C;font-style:italic;font-weight:400;margin-left:4px}
 mark{background:rgba(212,162,76,0.28);color:#F2D9A8;padding:0 3px;border-radius:3px;font-style:normal}
 
 .word-click-wrap{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px;align-items:center}

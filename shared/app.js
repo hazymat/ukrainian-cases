@@ -66,13 +66,23 @@ function initGroup(groupKey, itemCount, wrapperKey){
   }
 }
 
-function recordGroupAnswer(id, isCorrect){
+// qEl (the item's own .q element) is passed in directly by the caller, which already has it in
+// scope from building the item, rather than looked up here -- during a page-load replay of a
+// stored answer, this fires *before* that item has been appended to the DOM (buildWrapper/
+// assembleComboPage append the returned element only after the builder function returns), so a
+// query-based lookup at this point would silently find nothing.
+function recordGroupAnswer(id, isCorrect, qEl){
   const parts = id.split("_");
   const groupKey = parts[0]+"_"+parts[1];
   const g = groupTally[groupKey];
   if(!g) return;
   g.answered++;
   if(isCorrect) g.correct++;
+
+  if(qEl) qEl.dataset.answered = "1";
+  const groupEl = groupEls[groupKey];
+  if(groupEl) updateSkippedHighlights(groupEl);
+
   const justCompleted = g.answered>=g.total && !STORE[groupKey+"_cel"];
   if(justCompleted){
     STORE[groupKey+"_cel"]=true;
@@ -94,6 +104,29 @@ function recordGroupAnswer(id, isCorrect){
   }
   updateGroupUI(groupKey);
   if(justCompleted) celebrateGroup(groupKey);
+}
+
+// Flags any question that comes before the last-answered one in its exercise but is itself still
+// unanswered -- a likely accidental skip (e.g. answered 1 and 3, missed 2) rather than a question
+// simply not reached yet. Re-run after every answer in the group, so a flag clears itself the
+// moment the learner goes back and fills the gap.
+function updateSkippedHighlights(groupEl){
+  const items = [...groupEl.querySelectorAll(":scope > .body .q[data-item-id]")];
+  let lastAnsweredIndex = -1;
+  items.forEach((qEl,i)=>{ if(qEl.dataset.answered==="1") lastAnsweredIndex = i; });
+  items.forEach((qEl,i)=>{
+    const isSkipped = i < lastAnsweredIndex && qEl.dataset.answered!=="1";
+    qEl.classList.toggle("q-skipped", isSkipped);
+    let tag = qEl.querySelector(":scope > .skip-tag");
+    if(isSkipped && !tag){
+      tag = document.createElement("div");
+      tag.className = "skip-tag";
+      tag.innerHTML = `${emojify("⚠️")}<span>Пропущено, поверніться сюди <span class="en">Skipped, come back to this one</span></span>`;
+      qEl.insertBefore(tag, qEl.firstChild);
+    } else if(!isSkipped && tag){
+      tag.remove();
+    }
+  });
 }
 
 // Reward pool content lives in shared/rewards-data.js (loaded before this file, defines the
@@ -168,7 +201,8 @@ const EMOJI_IMG_MAP = {
   "1f370":"shortcake", "1f36f":"honey-pot", "1f475":"old-woman", "1f35e":"bread",
   "1f37d":"fork-knife-plate", "1f3e1":"house-garden", "1f3db":"classical-building", "1f943":"tumbler-glass",
   "1f389":"party-popper", "1f377":"wine-glass", "1f95a":"egg", "1f6e2":"oil-drum",
-  "1f376":"sake", "1f3c6":"trophy", "1f455":"tshirt", "1f33b":"sunflower", "1f3c5":"medal"
+  "1f376":"sake", "1f3c6":"trophy", "1f455":"tshirt", "1f33b":"sunflower", "1f3c5":"medal",
+  "26a0":"warning"
 };
 const UA_FLAG = "🇺🇦";
 
@@ -216,7 +250,7 @@ function ensureCelebrateNote(el, g, groupKey){
   const uk = tierKey==="t5" ? reward.uk : `${TIER_LEADS[tierKey].uk} ${reward.uk}`;
   const en = tierKey==="t5" ? reward.en : `${TIER_LEADS[tierKey].en} ${reward.en}`;
   const isRecord = !!STORE[groupKey+"_rec"];
-  const scoreBadge = `<span class="score-badge">${correct}/${g.total}</span>`;
+  const scoreBadge = `<span class="score-badge">${correct}/${g.total} правильно / correct</span>`;
   const recordBadge = isRecord
     ? `<span class="record-badge">${emojify("🏅")}<span>Новий рекорд! <span class="en">New record!</span></span></span>`
     : "";
@@ -344,7 +378,7 @@ function buildOptionButtons(wrapEl, opts, correctIndex, onResolve, mini, storeId
 }
 
 function buildTwoPart(item, idPrefix){
-  const q=document.createElement("div"); q.className="q";
+  const q=document.createElement("div"); q.className="q"; q.dataset.itemId=idPrefix;
   q.innerHTML=`<p class="word-display">${item.word}</p>
     <p class="bi-q-uk">Що означає це слово?</p><p class="bi-q-en">What does this word mean?</p>
     <div class="options mini-wrap"></div>
@@ -363,7 +397,7 @@ function buildTwoPart(item, idPrefix){
   const {opts:cOpts, correctIndex:cCorrect} = shuffle(item.answer, item.dforms);
   buildOptionButtons(caseWrap, cOpts, cCorrect, (isCorrect)=>{
     revealFeedback(q, isCorrect, item.explain, true);
-    recordGroupAnswer(idPrefix+"_c", isCorrect);
+    recordGroupAnswer(idPrefix+"_c", isCorrect, q);
   }, false, idPrefix+"_c");
   return q;
 }
@@ -372,7 +406,7 @@ let FILL_MODE = "type";
 try{ FILL_MODE = localStorage.getItem(STORAGE_KEY+"_fillmode") || "type"; }catch(e){}
 
 function buildFill(item, id){
-  const q=document.createElement("div"); q.className="q";
+  const q=document.createElement("div"); q.className="q"; q.dataset.itemId=id;
   const explainWithAnswer=item.explain+`<br><br>Правильна форма: <b>${item.answers.join(" / ")}</b>`;
 
   if(FILL_MODE==="mc" && item.opts && item.opts.length){
@@ -383,7 +417,7 @@ function buildFill(item, id){
     const {opts,correctIndex}=shuffle(item.answers[0], item.opts);
     buildOptionButtons(optsWrap, opts, correctIndex, (isCorrect)=>{
       revealFeedback(q,isCorrect,explainWithAnswer,true);
-      recordGroupAnswer(id+"_mc", isCorrect);
+      recordGroupAnswer(id+"_mc", isCorrect, q);
     }, false, id+"_mc");
     return q;
   }
@@ -401,7 +435,7 @@ function buildFill(item, id){
     input.disabled=true; btn.disabled=true;
     saveAnswer(id,{value:value,correct:isCorrect});
     revealFeedback(q,isCorrect,explainWithAnswer,true);
-    recordGroupAnswer(id, isCorrect);
+    recordGroupAnswer(id, isCorrect, q);
   };
   btn.addEventListener("click",()=>check(input.value));
   input.addEventListener("keydown",e=>{if(e.key==="Enter")check(input.value);});
@@ -411,14 +445,14 @@ function buildFill(item, id){
 }
 
 function buildMC(item, id){
-  const q=document.createElement("div"); q.className="q";
+  const q=document.createElement("div"); q.className="q"; q.dataset.itemId=id;
   q.innerHTML=`<p class="prompt"><span class="uk">${item.uk}</span><span class="translation">${item.en}</span></p>
     <div class="options"></div>
     <div class="feedback"><div class="verdict"></div><div class="explain"></div></div>`;
   const optsWrap=q.querySelector(".options");
   buildOptionButtons(optsWrap, item.opts, item.correct, (isCorrect)=>{
     revealFeedback(q, isCorrect, item.explain, true);
-    recordGroupAnswer(id, isCorrect);
+    recordGroupAnswer(id, isCorrect, q);
   }, false, id);
   return q;
 }
@@ -427,7 +461,7 @@ function buildMC(item, id){
 // "error" (click the wrong word, retries allowed until correct), "trick" (click the special
 // "no such word" chip because the sentence is correctly Nominative, not the target case).
 function buildRevisionItem(item, id){
-  const q=document.createElement("div"); q.className="q";
+  const q=document.createElement("div"); q.className="q"; q.dataset.itemId=id;
   const noteLabel = item.noteLabel || "No target-case word here";
   q.innerHTML=`<p class="translation" style="margin-bottom:10px">${item.en}</p>
     <div class="word-click-wrap"></div>
@@ -474,7 +508,7 @@ function buildRevisionItem(item, id){
     clickNoteEl.textContent = clickedIndex===item.target ? "" : item.revealNote;
     saveAnswer(id,{chosen:clickedIndex,correct:clickedIndex===item.target});
     answered++; if(clickedIndex===item.target)correctCount++; updateProgress();
-    recordGroupAnswer(id, clickedIndex===item.target);
+    recordGroupAnswer(id, clickedIndex===item.target, q);
     revealWhy();
   };
 
@@ -488,7 +522,7 @@ function buildRevisionItem(item, id){
     tryAgainEl.classList.remove("show");
     saveAnswer(id,{chosen:item.target,correct:true});
     answered++; correctCount++; updateProgress();
-    recordGroupAnswer(id, true);
+    recordGroupAnswer(id, true, q);
     revealWhy();
   };
 
@@ -545,6 +579,10 @@ function buildWrapper(wrapperTitleHtml, wrapperDesc, exercises, idPrefix, itemBu
     subBody.appendChild(noteEl); // re-append: moves it after the last question, however it was populated
     body.appendChild(sub);
     updateGroupUI(groupKey);
+    // Redo the skip-scan now every item is actually in the DOM: replaying stored answers fires
+    // recordGroupAnswer (and its own scan) mid-construction, before later items are appended, so
+    // that scan sees an incomplete list. This final pass is the one that's actually accurate.
+    updateSkippedHighlights(sub);
   });
   updateWrapperUI(wrapperKey);
   return top;
@@ -552,7 +590,7 @@ function buildWrapper(wrapperTitleHtml, wrapperDesc, exercises, idPrefix, itemBu
 
 // Combo/contrastive-page bracket-choice component: a sentence with a blank and word-forms in brackets.
 function buildBracket(item, id){
-  const q=document.createElement("div"); q.className="q";
+  const q=document.createElement("div"); q.className="q"; q.dataset.itemId=id;
   q.innerHTML=`<p class="prompt"><span class="uk">${item.pre}<span class="blank-slot">________</span>${item.post}</span><span class="translation">${item.en}</span></p>
     <div class="bracket-row"></div>
     <div class="feedback"><div class="verdict"></div><div class="explain"></div></div>`;
@@ -578,7 +616,7 @@ function buildBracket(item, id){
     blank.classList.add(isCorrect?"correct":"incorrect");
     saveAnswer(id,{chosen:chosenIndex,correct:isCorrect});
     revealFeedback(q,isCorrect,item.explain,true);
-    recordGroupAnswer(id, isCorrect);
+    recordGroupAnswer(id, isCorrect, q);
   };
   btns.forEach((btn,i)=>btn.addEventListener("click",()=>resolve(i)));
   const prior=STORE[id];
@@ -698,6 +736,7 @@ function assembleComboPage(){
     body.appendChild(noteEl); // re-append: moves it after the last question, however it was populated
     sectionsEl.appendChild(top);
     updateGroupUI(groupKey);
+    updateSkippedHighlights(top);
   });
 
   updateProgress();
