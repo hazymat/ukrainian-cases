@@ -353,7 +353,7 @@ function spawnConfetti(el){
     wrap.appendChild(piece);
   }
   el.appendChild(wrap);
-  setTimeout(()=>wrap.remove(), 1800);
+  setTimeout(()=>wrap.remove(), 2000);
 }
 
 // The reward/roast box (and its Reset button) is the only sign a completed exercise gives once
