@@ -67,7 +67,7 @@ details:not([open])>*:not(summary){display:none!important}
 .top-details .body{padding:0 20px 20px}
 .top-details.group-complete,.subtest.group-complete{border-color:#4C9A6A}
 .group-status{order:2;flex-basis:100%;display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-weight:400;font-size:0.82rem;color:#9FB0CC}
-.group-status:empty{display:none}
+.group-status-partial{color:#D4A24C}
 .group-check{font-size:0.95rem}
 .group-reset{background:none;border:none;padding:0;color:#9FB0CC;text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-size:0.82rem;font-family:inherit}
 .group-reset:hover{color:#D4A24C}

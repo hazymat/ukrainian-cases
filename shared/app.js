@@ -76,6 +76,14 @@ function recordGroupAnswer(id, isCorrect){
   updateGroupUI(groupKey);
 }
 
+function wireGroupReset(statusEl, groupKey){
+  const resetBtn = statusEl.querySelector(".group-reset");
+  resetBtn.addEventListener("click",(e)=>{
+    e.preventDefault(); e.stopPropagation();
+    resetGroup(groupKey);
+  });
+}
+
 function updateGroupUI(groupKey){
   const g = groupTally[groupKey];
   const el = groupEls[groupKey];
@@ -85,14 +93,16 @@ function updateGroupUI(groupKey){
   el.classList.toggle("group-complete", complete);
   if(statusEl){
     if(complete){
+      statusEl.className = "group-status group-status-complete";
       statusEl.innerHTML = `<span class="group-check">✅</span><span>Завершено · Complete. ${g.correct}/${g.total} правильно / correct.</span><button type="button" class="group-reset">Скинути / Reset</button>`;
-      const resetBtn = statusEl.querySelector(".group-reset");
-      resetBtn.addEventListener("click",(e)=>{
-        e.preventDefault(); e.stopPropagation();
-        resetGroup(groupKey);
-      });
+      wireGroupReset(statusEl, groupKey);
+    } else if(g.answered>0){
+      statusEl.className = "group-status group-status-partial";
+      statusEl.innerHTML = `<span>Відповідано ${g.answered} із ${g.total} · ${g.answered} of ${g.total} questions answered.</span><button type="button" class="group-reset">Скинути / Reset</button>`;
+      wireGroupReset(statusEl, groupKey);
     } else {
-      statusEl.innerHTML = "";
+      statusEl.className = "group-status group-status-empty";
+      statusEl.textContent = `Відповідано 0 із ${g.total} · 0 of ${g.total} questions answered.`;
     }
   }
   const wrapperKey = groupWrapperMap[groupKey];
