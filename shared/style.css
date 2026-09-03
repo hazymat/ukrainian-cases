@@ -26,6 +26,7 @@ button.trophy-box-icon.is-active{border-color:#D4A24C;background:rgba(212,162,76
 .trophy-box-detail{background:#1E2F52;border:1px solid #37507F;border-radius:8px;padding:10px 14px;color:#BFE8CE;font-size:0.9rem;font-weight:700}
 .trophy-box-detail .en{display:block;margin-top:4px;color:#9FB0CC;font-style:italic;font-weight:400}
 .trophy-box-detail .en .uk-word{font-style:normal;color:#F2EEE3}
+.trophy-box-empty-row{display:flex;align-items:center;gap:12px}
 .trophy-box-empty{color:#9FB0CC;font-size:0.9rem;margin:0}
 .trophy-box-empty .en{display:block;font-style:italic;margin-top:2px}
 .trophy-box-link{display:block;color:#D4A24C;font-size:0.82rem;text-decoration:none;border-top:1px solid #37507F;padding-top:10px;margin-top:2px}

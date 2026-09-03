@@ -286,8 +286,8 @@ function renderPageTrophies(){
   if(!earned.length){
     // Three greyed-out placeholder slots, so the empty box still reads as "trophies collect
     // here" rather than just blank space.
-    const placeholders = `<span class="trophy-box-icon trophy-box-icon-placeholder">${emojify("⏳")}</span>`;
-    body.innerHTML = `<div class="trophy-box-icons">${placeholders}</div><p class="trophy-box-empty">Виконай вправу, щоб отримати свій перший трофей!<span class="en">Complete an exercise to acquire your first trophy!</span></p>${seeAllLink}`;
+    const placeholder = `<span class="trophy-box-icon trophy-box-icon-placeholder">${emojify("⏳")}</span>`;
+    body.innerHTML = `<div class="trophy-box-empty-row">${placeholder}<p class="trophy-box-empty">Виконай вправу, щоб отримати свій перший трофей!<span class="en">Complete an exercise to acquire your first trophy!</span></p></div>${seeAllLink}`;
     return;
   }
   const icons = earned.map((a,i)=>{
