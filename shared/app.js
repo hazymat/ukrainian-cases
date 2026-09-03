@@ -342,15 +342,18 @@ function spawnConfetti(el){
   wrap.className = "confetti-burst";
   for(let i=0;i<20;i++){
     const piece = document.createElement("span");
-    // Pieces start clustered near the centre (a burst point), not pre-spread across the full
-    // width -- the outward drift (--dx) during the fall is what creates the spread over time,
-    // so it reads as bursting outward rather than a static row of dots appearing all at once.
+    // Spread across the full width from the start (a burst-point cluster read as a single
+    // narrow line); a little random vertical offset stops that starting row from looking like
+    // a flat line. Duration also varies per piece so they don't fall in lockstep, for a
+    // flutterier, less uniform feel.
     piece.className = "confetti-piece"+(i%3===0 ? " confetti-round" : "");
-    piece.style.left = (42+Math.random()*16)+"%";
+    piece.style.left = (Math.random()*100)+"%";
+    piece.style.top = (Math.random()*24-12)+"px";
     piece.style.background = colors[i % colors.length];
+    piece.style.animationDuration = (2.1+Math.random()*0.7)+"s";
     piece.style.animationDelay = (Math.random()*0.25)+"s";
     piece.style.setProperty("--rot", (Math.random()*480-240)+"deg");
-    piece.style.setProperty("--dx", (Math.random()*260-130)+"px");
+    piece.style.setProperty("--dx", (Math.random()*320-160)+"px");
     wrap.appendChild(piece);
   }
   el.appendChild(wrap);
