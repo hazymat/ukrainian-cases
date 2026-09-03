@@ -276,13 +276,13 @@ function renderPageTrophies(){
   const label = (typeof CASE_LABEL!=="undefined") ? CASE_LABEL : {uk:"", en:""};
   const titleEl = document.getElementById("pageTrophyTitle");
   if(titleEl){
-    titleEl.innerHTML = `Твої трофеї: ${label.uk}<span class="en">Your trophies: ${label.en}</span>`;
+    titleEl.innerHTML = `Мої трофеї: ${label.uk}<span class="en">My trophies: ${label.en}</span>`;
   }
   const earned = Object.keys(STORE)
     .filter(k=>k.endsWith("_rw"))
     .map(k=>STORE[k])
     .filter(a=>a && REWARD_TIERS[a.tier] && REWARD_TIERS[a.tier][a.idx]);
-  const seeAllLink = `<a class="trophy-box-link" href="trophy.html">Побачити всі трофеї <span class="en">See all your trophies</span></a>`;
+  const seeAllLink = `<a class="trophy-box-link" href="trophy.html">Побачити всі мої трофеї <span class="en">See all my trophies</span></a>`;
   if(!earned.length){
     // Three greyed-out placeholder slots, so the empty box still reads as "trophies collect
     // here" rather than just blank space.
