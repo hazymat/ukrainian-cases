@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Reward Library: Ukrainian Cases (internal)</title>
+<title>Roasts / Rewards Library: Ukrainian Cases (internal)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -38,8 +38,8 @@
 </head>
 <body>
   <p><a class="home-link" href="index.html">‹ All cases</a></p>
-  <h1>Reward library</h1>
-  <p class="devnote"><strong>Internal reference, not for learners.</strong> This page lists every line the per-exercise completion celebration can draw, grouped by score. It's not linked from anywhere on the site; it exists so the content can be reviewed and edited over time. It loads <code>shared/rewards-data.js</code> directly, the same file <code>shared/app.js</code> uses, so this list is always exactly what's live: edit a line in that one file and both update.</p>
+  <h1>Roasts / Rewards Library</h1>
+  <p class="devnote"><strong>Internal reference, not for learners.</strong> This is a tone guide, not a content list to browse for fun. It documents the voice the completion celebration is meant to speak in: affectionate, mildly cheeky commentary built around Ukrainian food and cultural symbols, there to keep the practice sessions light without ever tipping into unkind. It's not linked from anywhere on the site. Below a strong score the register is playful ribbing, family-friendly, never mean-spirited; from a strong score up it turns warm and genuinely proud. Use this page to calibrate any new line against that established register rather than inventing tone from scratch. It loads <code>shared/rewards-data.js</code> directly, the same file <code>shared/app.js</code> uses, so this list is always exactly what's live: edit a line in that one file and both update.</p>
 
   <p style="color:#9FB0CC;font-size:0.9rem;line-height:1.6">Picked per exercise via a site-wide shuffle bag: each tier's pool is dealt out in shuffled order and only reshuffles once every line has been seen. Whichever line gets drawn sticks for that exercise across reloads, until it's reset. Every tier except 10/10 gets a dynamic <code>N/total. Lead-in!</code> prefix added in code (see <code>TIER_LEADS</code> in <code>shared/app.js</code>) ahead of the line shown below; the 10/10 pool already opens each line with its own score/exclamation.</p>
 
@@ -62,6 +62,31 @@ const TIER_META = {
 
 function wrapUkWords(en){
   return en.replace(/[Ѐ-ӿ]+/g, m => `<span class="uk-word">${m}</span>`);
+}
+
+// Mirrors EMOJI_IMG_MAP / emojify() in shared/app.js -- kept in sync manually, since this page
+// intentionally avoids loading the full app.js (which expects exercise DOM this page doesn't have).
+const EMOJI_IMG_MAP = {
+  "1f62d":"crying-face", "1f624":"steam-nose", "1f611":"expressionless", "1f629":"weary",
+  "1f644":"rolling-eyes", "1f372":"pot-of-food", "1f95f":"dumpling", "1f9ca":"ice",
+  "1f956":"baguette-bread", "1f52a":"kitchen-knife", "1f342":"fallen-leaf", "1f96c":"leafy-green",
+  "1f963":"bowl-spoon", "1f954":"potato", "2728":"sparkles", "1fad9":"jar",
+  "1f383":"jack-o-lantern", "1f9c0":"cheese", "1f968":"pretzel", "1f96f":"bagel",
+  "1f358":"rice-cracker", "1f32f":"burrito", "1f9c4":"garlic", "1f9f5":"thread",
+  "1f34e":"red-apple", "1f33d":"corn", "1f352":"cherries", "1f373":"cooking",
+  "1f370":"shortcake", "1f36f":"honey-pot", "1f475":"old-woman", "1f35e":"bread",
+  "1f37d":"fork-knife-plate", "1f3e1":"house-garden", "1f943":"tumbler-glass",
+  "1f389":"party-popper", "1f377":"wine-glass", "1f95a":"egg", "1f6e2":"oil-drum",
+  "1f376":"sake", "1f3c6":"trophy", "1f455":"tshirt", "1f33b":"sunflower"
+};
+const UA_FLAG = "🇺🇦";
+function emojify(str){
+  if(str === UA_FLAG) return `<img class="flag-img flag-wave" src="assets/flag-ukraine.svg" alt="Прапор України">`;
+  return [...str].map(ch=>{
+    const cp = ch.codePointAt(0).toString(16);
+    const name = EMOJI_IMG_MAP[cp];
+    return name ? `<img class="emoji-img" src="assets/emoji/${name}.svg" alt="">` : ch;
+  }).join("");
 }
 
 const jumpNav = document.getElementById('jumpNav');
@@ -87,14 +112,14 @@ Object.keys(TIER_META).forEach(tierKey=>{
   pool.forEach((r,i)=>{
     const li = document.createElement('li');
     li.className = 'entry';
-    li.innerHTML = `<span class="num">${i}</span><span class="emoji">${r.emoji}</span><span class="body"><span class="uk">${r.uk}</span><span class="en">${wrapUkWords(r.en)}</span></span>`;
+    li.innerHTML = `<span class="num">${i}</span><span class="emoji">${emojify(r.emoji)}</span><span class="body"><span class="uk">${r.uk}</span><span class="en">${wrapUkWords(r.en)}</span></span>`;
     ol.appendChild(li);
   });
   section.appendChild(ol);
   tiersEl.appendChild(section);
 });
 
-document.getElementById('footerNote').textContent = `${total} lines total across ${Object.keys(TIER_META).length} tiers.`;
+document.getElementById('footerNote').innerHTML = `${total} lines total across ${Object.keys(TIER_META).length} tiers.<br>Emoji illustrations by <a href="https://github.com/jdecked/twemoji" style="color:#9FB0CC">Twemoji</a>, licensed CC BY 4.0.`;
 </script>
 </body>
 </html>

@@ -72,7 +72,12 @@ details:not([open])>*:not(summary){display:none!important}
 .group-reset:hover{color:#D4A24C}
 .celebrate-note{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 14px;background:rgba(76,154,106,0.12);border:1px solid rgba(76,154,106,0.4);border-radius:8px}
 .celebrate-note[hidden]{display:none}
-.celebrate-emoji{font-size:1.3rem;flex-shrink:0}
+.celebrate-emoji{font-size:1.3rem;flex-shrink:0;display:inline-flex;align-items:center;gap:2px}
+.emoji-img{width:1em;height:1em;vertical-align:-0.15em}
+.flag-img{width:1.4em;height:auto;border-radius:3px;display:inline-block}
+.flag-wave{animation:flag-wave-kf 2.6s ease-in-out infinite;transform-origin:0% 50%}
+@keyframes flag-wave-kf{0%,100%{transform:skewY(0deg) scaleY(1)}25%{transform:skewY(-4deg) scaleY(0.97)}50%{transform:skewY(0deg) scaleY(1)}75%{transform:skewY(4deg) scaleY(0.97)}}
+@media (prefers-reduced-motion: reduce){.flag-wave{animation:none}}
 .celebrate-text{color:#BFE8CE;font-size:0.92rem}
 .celebrate-text .en{display:block;color:#9FB0CC;font-style:italic;margin-top:4px}
 .celebrate-text .en .uk-word{font-style:normal;color:#F2EEE3}

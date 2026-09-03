@@ -138,6 +138,40 @@ function wrapUkWords(en){
   return en.replace(/[Ѐ-ӿ]+/g, m => `<span class="uk-word">${m}</span>`);
 }
 
+// Reward-note emoji are swapped for real image files (assets/emoji/, Twemoji SVGs, CC-BY 4.0,
+// credited in the footer) instead of relying on the OS emoji font -- Windows in particular
+// renders several of these (flags especially) inconsistently or not at all. Keyed by lowercase
+// hex codepoint. The Ukraine flag is handled separately via assets/flag-ukraine.svg (a hand-built
+// public-domain flag, so it can also get a CSS wave animation) rather than through this map.
+const EMOJI_IMG_MAP = {
+  "1f62d":"crying-face", "1f624":"steam-nose", "1f611":"expressionless", "1f629":"weary",
+  "1f644":"rolling-eyes", "1f372":"pot-of-food", "1f95f":"dumpling", "1f9ca":"ice",
+  "1f956":"baguette-bread", "1f52a":"kitchen-knife", "1f342":"fallen-leaf", "1f96c":"leafy-green",
+  "1f963":"bowl-spoon", "1f954":"potato", "2728":"sparkles", "1fad9":"jar",
+  "1f383":"jack-o-lantern", "1f9c0":"cheese", "1f968":"pretzel", "1f96f":"bagel",
+  "1f358":"rice-cracker", "1f32f":"burrito", "1f9c4":"garlic", "1f9f5":"thread",
+  "1f34e":"red-apple", "1f33d":"corn", "1f352":"cherries", "1f373":"cooking",
+  "1f370":"shortcake", "1f36f":"honey-pot", "1f475":"old-woman", "1f35e":"bread",
+  "1f37d":"fork-knife-plate", "1f3e1":"house-garden", "1f943":"tumbler-glass",
+  "1f389":"party-popper", "1f377":"wine-glass", "1f95a":"egg", "1f6e2":"oil-drum",
+  "1f376":"sake", "1f3c6":"trophy", "1f455":"tshirt", "1f33b":"sunflower"
+};
+const UA_FLAG = "🇺🇦";
+
+// Splits an emoji string by Unicode code point (correct for astral-plane emoji, unlike naive
+// string indexing) and swaps each recognized glyph for its local image; anything not in the map
+// (a stray variation selector, an emoji we haven't added) just passes through as plain text.
+function emojify(str){
+  if(str === UA_FLAG){
+    return `<img class="flag-img flag-wave" src="assets/flag-ukraine.svg" alt="Прапор України">`;
+  }
+  return [...str].map(ch=>{
+    const cp = ch.codePointAt(0).toString(16);
+    const name = EMOJI_IMG_MAP[cp];
+    return name ? `<img class="emoji-img" src="assets/emoji/${name}.svg" alt="">` : ch;
+  }).join("");
+}
+
 // The note element itself is pre-placed (empty, hidden) at the end of the exercise body by
 // buildWrapper/assembleComboPage, before any items are answered. That guarantees it always sits
 // after the last question, even when this fires during a same-tick replay of a stored answer on
@@ -163,7 +197,7 @@ function ensureCelebrateNote(el, g, groupKey){
   const uk = tierKey==="t5" ? reward.uk : `${correct}/${g.total}. ${TIER_LEADS[tierKey].uk} ${reward.uk}`;
   const en = tierKey==="t5" ? reward.en : `${correct}/${g.total}. ${TIER_LEADS[tierKey].en} ${reward.en}`;
   note.hidden = false;
-  note.innerHTML = `<span class="celebrate-emoji">${reward.emoji}</span><span class="celebrate-text">${uk}<span class="en">${wrapUkWords(en)}</span></span>`;
+  note.innerHTML = `<span class="celebrate-emoji">${emojify(reward.emoji)}</span><span class="celebrate-text">${uk}<span class="en">${wrapUkWords(en)}</span></span>`;
 }
 
 function celebrateGroup(groupKey){
