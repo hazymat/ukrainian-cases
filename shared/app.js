@@ -488,13 +488,23 @@ function buildRevisionItem(item, id){
     wrap.appendChild(noneChip);
   }
 
-  const revealWhy=()=>{
-    if(!item.why)return;
+  // When the item has a "why" follow-up, the item isn't done -- and doesn't count toward the
+  // score or the group tally -- until that second step is answered too, not just the word click.
+  // onWhyDone fires immediately (synchronously) for items with no why, so the no-why path behaves
+  // exactly as before.
+  const revealWhy=(onWhyDone)=>{
+    if(!item.why){ onWhyDone(); return; }
     whyPartEl.classList.remove("hidden");
     const whyWrap=whyPartEl.querySelector(".why-opts");
     buildOptionButtons(whyWrap, item.why.opts, item.why.correct, (isCorrect)=>{
       revealFeedback(whyPartEl, isCorrect, item.why.explain, false);
+      onWhyDone();
     }, false, id+"_why");
+  };
+
+  const completeItem=(isCorrect)=>{
+    answered++; if(isCorrect)correctCount++; updateProgress();
+    recordGroupAnswer(id, isCorrect, q);
   };
 
   const finish=(clickedIndex)=>{
@@ -507,9 +517,7 @@ function buildRevisionItem(item, id){
     tryAgainEl.classList.remove("show");
     clickNoteEl.textContent = clickedIndex===item.target ? "" : item.revealNote;
     saveAnswer(id,{chosen:clickedIndex,correct:clickedIndex===item.target});
-    answered++; if(clickedIndex===item.target)correctCount++; updateProgress();
-    recordGroupAnswer(id, clickedIndex===item.target, q);
-    revealWhy();
+    revealWhy(()=>completeItem(clickedIndex===item.target));
   };
 
   const finishError=(clickedIndex)=>{
@@ -521,9 +529,7 @@ function buildRevisionItem(item, id){
     chip.after(tick);
     tryAgainEl.classList.remove("show");
     saveAnswer(id,{chosen:item.target,correct:true});
-    answered++; correctCount++; updateProgress();
-    recordGroupAnswer(id, true, q);
-    revealWhy();
+    revealWhy(()=>completeItem(true));
   };
 
   [...wrap.children].forEach((chip,i)=>{
