@@ -25,6 +25,80 @@ function updateProgress(){
   document.getElementById("fillBar").style.width=(total?(answered/total*100):0)+"%";
 }
 
+// Per-exercise ("group") completion tracking: each exercise/section gets a groupKey
+// (idPrefix+"_"+exerciseIndex, e.g. "v_2"), derived from the item id (idPrefix+"_"+ei+"_"+ii,
+// optionally with a suffix like "_c"/"_mc"/"_why") by taking its first two underscore-separated
+// parts. Single-case pages additionally group exercises under a wrapperKey (one per Part, e.g.
+// "v") for the always-visible "N/M exercises complete" tally; combo pages have no wrapper level.
+const groupTally = {};
+const groupEls = {};
+const groupWrapperMap = {};
+const wrapperGroups = {};
+const wrapperEls = {};
+
+function initGroup(groupKey, itemCount, wrapperKey){
+  groupTally[groupKey] = {answered:0, correct:0, total:itemCount};
+  if(wrapperKey){
+    groupWrapperMap[groupKey] = wrapperKey;
+    if(!wrapperGroups[wrapperKey]) wrapperGroups[wrapperKey] = [];
+    wrapperGroups[wrapperKey].push(groupKey);
+  }
+}
+
+function recordGroupAnswer(id, isCorrect){
+  const parts = id.split("_");
+  const groupKey = parts[0]+"_"+parts[1];
+  const g = groupTally[groupKey];
+  if(!g) return;
+  g.answered++;
+  if(isCorrect) g.correct++;
+  updateGroupUI(groupKey);
+}
+
+function updateGroupUI(groupKey){
+  const g = groupTally[groupKey];
+  const el = groupEls[groupKey];
+  if(!g || !el) return;
+  const statusEl = el.querySelector(":scope > summary > .group-status");
+  const complete = g.total>0 && g.answered>=g.total;
+  el.classList.toggle("group-complete", complete);
+  if(statusEl){
+    if(complete){
+      statusEl.innerHTML = `<span class="group-check">✅</span><span>Завершено · Complete. ${g.correct}/${g.total} правильно / correct.</span><button type="button" class="group-reset">Скинути / Reset</button>`;
+      const resetBtn = statusEl.querySelector(".group-reset");
+      resetBtn.addEventListener("click",(e)=>{
+        e.preventDefault(); e.stopPropagation();
+        resetGroup(groupKey);
+      });
+    } else {
+      statusEl.innerHTML = "";
+    }
+  }
+  const wrapperKey = groupWrapperMap[groupKey];
+  if(wrapperKey) updateWrapperUI(wrapperKey);
+}
+
+function updateWrapperUI(wrapperKey){
+  const groups = wrapperGroups[wrapperKey];
+  const el = wrapperEls[wrapperKey];
+  if(!groups || !el) return;
+  const statusEl = el.querySelector(":scope > summary > .group-status");
+  if(!statusEl) return;
+  const completeCount = groups.filter(gk=>{
+    const g=groupTally[gk]; return g && g.total>0 && g.answered>=g.total;
+  }).length;
+  statusEl.textContent = `${completeCount}/${groups.length} вправи виконано · ${completeCount}/${groups.length} exercises complete`;
+}
+
+function resetGroup(groupKey){
+  const prefix = groupKey+"_";
+  Object.keys(STORE).forEach(k=>{
+    if(k===groupKey || k.startsWith(prefix)) delete STORE[k];
+  });
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STORE)); }catch(e){}
+  location.reload();
+}
+
 document.getElementById("resetBtn").addEventListener("click",()=>{
   try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
   location.reload();
@@ -100,6 +174,7 @@ function buildTwoPart(item, idPrefix){
   const {opts:cOpts, correctIndex:cCorrect} = shuffle(item.answer, item.dforms);
   buildOptionButtons(caseWrap, cOpts, cCorrect, (isCorrect)=>{
     revealFeedback(q, isCorrect, item.explain, true);
+    recordGroupAnswer(idPrefix+"_c", isCorrect);
   }, false, idPrefix+"_c");
   return q;
 }
@@ -119,6 +194,7 @@ function buildFill(item, id){
     const {opts,correctIndex}=shuffle(item.answers[0], item.opts);
     buildOptionButtons(optsWrap, opts, correctIndex, (isCorrect)=>{
       revealFeedback(q,isCorrect,explainWithAnswer,true);
+      recordGroupAnswer(id+"_mc", isCorrect);
     }, false, id+"_mc");
     return q;
   }
@@ -136,6 +212,7 @@ function buildFill(item, id){
     input.disabled=true; btn.disabled=true;
     saveAnswer(id,{value:value,correct:isCorrect});
     revealFeedback(q,isCorrect,explainWithAnswer,true);
+    recordGroupAnswer(id, isCorrect);
   };
   btn.addEventListener("click",()=>check(input.value));
   input.addEventListener("keydown",e=>{if(e.key==="Enter")check(input.value);});
@@ -152,6 +229,7 @@ function buildMC(item, id){
   const optsWrap=q.querySelector(".options");
   buildOptionButtons(optsWrap, item.opts, item.correct, (isCorrect)=>{
     revealFeedback(q, isCorrect, item.explain, true);
+    recordGroupAnswer(id, isCorrect);
   }, false, id);
   return q;
 }
@@ -192,7 +270,7 @@ function buildRevisionItem(item, id){
     whyPartEl.classList.remove("hidden");
     const whyWrap=whyPartEl.querySelector(".why-opts");
     buildOptionButtons(whyWrap, item.why.opts, item.why.correct, (isCorrect)=>{
-      revealFeedback(whyPartEl, isCorrect, item.why.explain, true);
+      revealFeedback(whyPartEl, isCorrect, item.why.explain, false);
     }, false, id+"_why");
   };
 
@@ -207,6 +285,7 @@ function buildRevisionItem(item, id){
     clickNoteEl.textContent = clickedIndex===item.target ? "" : item.revealNote;
     saveAnswer(id,{chosen:clickedIndex,correct:clickedIndex===item.target});
     answered++; if(clickedIndex===item.target)correctCount++; updateProgress();
+    recordGroupAnswer(id, clickedIndex===item.target);
     revealWhy();
   };
 
@@ -220,6 +299,7 @@ function buildRevisionItem(item, id){
     tryAgainEl.classList.remove("show");
     saveAnswer(id,{chosen:item.target,correct:true});
     answered++; correctCount++; updateProgress();
+    recordGroupAnswer(id, true);
     revealWhy();
   };
 
@@ -250,11 +330,17 @@ function buildRevisionItem(item, id){
 
 function buildWrapper(wrapperTitleHtml, wrapperDesc, exercises, idPrefix, itemBuilder, extraHtml){
   const top=document.createElement("details"); top.className="top-details";
-  top.innerHTML=`<summary>${wrapperTitleHtml}</summary><div class="body"><p class="section-desc">${wrapperDesc}</p>${extraHtml||""}</div>`;
+  top.innerHTML=`<summary>${wrapperTitleHtml}<span class="group-status"></span></summary><div class="body"><p class="section-desc">${wrapperDesc}</p>${extraHtml||""}</div>`;
   const body=top.querySelector(".body");
+  const wrapperKey=idPrefix;
+  wrapperEls[wrapperKey]=top;
+  wrapperGroups[wrapperKey]=[];
   exercises.forEach((ex,ei)=>{
     const sub=document.createElement("details"); sub.className="subtest";
-    sub.innerHTML=`<summary>${ex.title}</summary><div class="body"></div>`;
+    sub.innerHTML=`<summary>${ex.title}<span class="group-status"></span></summary><div class="body"></div>`;
+    const groupKey=idPrefix+"_"+ei;
+    groupEls[groupKey]=sub;
+    initGroup(groupKey, ex.items.length, wrapperKey);
     const subBody=sub.querySelector(".body");
     if(ex.desc){
       const descEl=document.createElement("p"); descEl.className="desc"; descEl.textContent=ex.desc;
@@ -264,7 +350,9 @@ function buildWrapper(wrapperTitleHtml, wrapperDesc, exercises, idPrefix, itemBu
       subBody.appendChild(itemBuilder(item, idPrefix+"_"+ei+"_"+ii));
     });
     body.appendChild(sub);
+    updateGroupUI(groupKey);
   });
+  updateWrapperUI(wrapperKey);
   return top;
 }
 
@@ -296,6 +384,7 @@ function buildBracket(item, id){
     blank.classList.add(isCorrect?"correct":"incorrect");
     saveAnswer(id,{chosen:chosenIndex,correct:isCorrect});
     revealFeedback(q,isCorrect,item.explain,true);
+    recordGroupAnswer(id, isCorrect);
   };
   btns.forEach((btn,i)=>btn.addEventListener("click",()=>resolve(i)));
   const prior=STORE[id];
@@ -397,7 +486,10 @@ function assembleComboPage(){
   DATA.exercises.forEach((ex,ei)=>{
     if(ei>0) sectionsEl.appendChild(stitch());
     const top=document.createElement("details"); top.className="top-details";
-    top.innerHTML=`<summary>${ex.title}</summary><div class="body"></div>`;
+    top.innerHTML=`<summary>${ex.title}<span class="group-status"></span></summary><div class="body"></div>`;
+    const groupKey="m_"+ei;
+    groupEls[groupKey]=top;
+    initGroup(groupKey, ex.items.length, null);
     const body=top.querySelector(".body");
     if(ex.desc){
       const d=document.createElement("p"); d.className="section-desc"; d.textContent=ex.desc;
@@ -407,6 +499,7 @@ function assembleComboPage(){
       body.appendChild(buildBracket(item, "m_"+ei+"_"+ii));
     });
     sectionsEl.appendChild(top);
+    updateGroupUI(groupKey);
   });
 
   updateProgress();
