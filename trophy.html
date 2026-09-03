@@ -12,7 +12,6 @@
 <style>
   .trophy-page{max-width:720px;margin:0 auto;padding:0 20px 80px}
   .empty-state{background:#24365C;border:1px solid #37507F;border-radius:10px;padding:28px 24px;text-align:center;color:#9FB0CC;margin-top:24px}
-  .empty-state .big-emoji{font-size:2.4rem;display:block;margin-bottom:10px}
   .page-group{margin-top:36px}
   .page-group-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:8px;border-bottom:1px solid #37507F;margin-bottom:14px}
   .page-group-head h2{font-size:1.15rem;margin:0;color:#D4A24C}
@@ -65,7 +64,7 @@ const EMOJI_IMG_MAP = {
   "1f37d":"fork-knife-plate", "1f3e1":"house-garden", "1f3db":"classical-building",
   "1f943":"tumbler-glass", "1f389":"party-popper", "1f377":"wine-glass", "1f95a":"egg",
   "1f6e2":"oil-drum", "1f376":"sake", "1f3c6":"trophy", "1f455":"tshirt", "1f33b":"sunflower",
-  "1f3c5":"medal"
+  "1f3c5":"medal", "23f3":"hourglass", "26a0":"warning"
 };
 const UA_FLAG = "🇺🇦";
 function emojify(str){
@@ -144,7 +143,8 @@ PAGES.forEach(page=>{
 });
 
 if(!totalTrophies){
-  contentEl.innerHTML = `<div class="empty-state"><span class="big-emoji">🥺</span>The shelf's empty for now. Finish any exercise on a case page and its reward will show up here.</div>`;
+  const placeholders = Array(3).fill(`<span class="trophy-box-icon trophy-box-icon-placeholder">${emojify("⏳")}</span>`).join("");
+  contentEl.innerHTML = `<div class="empty-state"><div class="trophy-box-icons" style="justify-content:center;margin-bottom:14px">${placeholders}</div><p style="margin:0">Хочеш почати колекціонувати нагороди? Виконай свою першу вправу в обраному відмінку, щоб розпочати!<span class="en" style="display:block;margin-top:6px;font-style:italic">Ready to start collecting rewards? Complete your first exercise in your chosen case to get started!</span></p></div>`;
 } else {
   const summary = document.createElement('p');
   summary.className = 'summary-line';
