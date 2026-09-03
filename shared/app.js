@@ -370,8 +370,8 @@ function spawnConfetti(el){
   el.appendChild(wrap);
   // Five quick handfuls thrown in close succession, rather than one flat burst of pieces
   // appearing all at once, so it reads more like confetti being thrown than a single pop.
-  const waveDelays = [0,90,180,270,360];
-  waveDelays.forEach(delay=>setTimeout(()=>throwWave(8), delay));
+  const waveDelays = [0,150,300,450,600];
+  waveDelays.forEach(delay=>setTimeout(()=>throwWave(20), delay));
   setTimeout(()=>wrap.remove(), waveDelays[waveDelays.length-1]+3000);
 }
 
