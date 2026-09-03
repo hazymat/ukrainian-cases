@@ -124,21 +124,22 @@ details:not([open])>*:not(summary){display:none!important}
 .confetti-burst{position:absolute;top:0;right:0;bottom:0;left:0;overflow:visible;pointer-events:none;z-index:20}
 .confetti-piece{position:absolute;top:0;width:10px;height:18px;animation-name:confetti-fall;animation-duration:2.4s;animation-timing-function:linear;animation-fill-mode:forwards}
 .confetti-piece.confetti-round{border-radius:50%}
-/* A single linear timing-function across the whole animation, deliberately: overriding
-   animation-timing-function per keyframe (an earlier version did this) makes every piece
-   decelerate to a dead stop at each keyframe boundary, and since every piece shares the same
-   percentage stops they all visibly pause at the same points. Linear keeps velocity continuous;
-   the burst-then-flutter shape now comes purely from keyframe spacing/position (a fast 0-18%
-   rise, then a wider, zig-zagging dx multiplier on the way down: 0.3, 0.95, 0.55, 1.05, 0.8).
-   Opacity stays full until near the very end instead of fading the whole way down. */
+/* A single linear timing-function across the whole animation: overriding
+   animation-timing-function per keyframe makes every piece decelerate to a dead stop at each
+   keyframe boundary, and since every piece shares the same percentage stops they all visibly
+   pause at the same points. Linear keeps velocity continuous. Fountain shape (poof up and out,
+   then a slow float down) comes purely from keyframe spacing: the rise happens over a short
+   0-16% slice (fast), the float down is spread over the remaining 84% (slow), and the dx
+   multiplier only ever grows (0.35, 0.6, 0.85, 1.0) so pieces drift steadily outward and never
+   reverse or overshoot back toward the centre. Opacity fades only over the last stretch. */
 @keyframes confetti-fall{
   0%{transform:translate(0,0) rotate(0deg) scale(0.5);opacity:0}
   6%{opacity:1}
-  18%{transform:translate(calc(var(--dx,0px)*0.3),-150px) rotate(calc(var(--rot,180deg)*0.3)) scale(1)}
-  38%{transform:translate(calc(var(--dx,0px)*0.95),40px) rotate(calc(var(--rot,180deg)*0.55)) scale(1)}
-  56%{transform:translate(calc(var(--dx,0px)*0.55),220px) rotate(calc(var(--rot,180deg)*0.75)) scale(1)}
-  78%{transform:translate(calc(var(--dx,0px)*1.05),400px) rotate(calc(var(--rot,180deg)*0.9)) scale(1);opacity:1}
-  100%{transform:translate(calc(var(--dx,0px)*0.8),560px) rotate(var(--rot,180deg)) scale(1);opacity:0}
+  16%{transform:translate(calc(var(--dx,0px)*0.35),-110px) rotate(calc(var(--rot,180deg)*0.25)) scale(1)}
+  40%{transform:translate(calc(var(--dx,0px)*0.6),40px) rotate(calc(var(--rot,180deg)*0.5)) scale(1)}
+  65%{transform:translate(calc(var(--dx,0px)*0.85),210px) rotate(calc(var(--rot,180deg)*0.75)) scale(1)}
+  88%{transform:translate(var(--dx,0px),360px) rotate(calc(var(--rot,180deg)*0.95)) scale(1);opacity:1}
+  100%{transform:translate(var(--dx,0px),430px) rotate(var(--rot,180deg)) scale(1);opacity:0}
 }
 /* A small solid diamond (a square rotated 45deg, not a blurred glow) pops in and out twice as
    the piece falls, for a sharp glint rather than a soft glisten. */
