@@ -143,7 +143,7 @@ PAGES.forEach(page=>{
 });
 
 if(!totalTrophies){
-  const placeholders = Array(3).fill(`<span class="trophy-box-icon trophy-box-icon-placeholder">${emojify("⏳")}</span>`).join("");
+  const placeholders = `<span class="trophy-box-icon trophy-box-icon-placeholder">${emojify("⏳")}</span>`;
   contentEl.innerHTML = `<div class="empty-state"><div class="trophy-box-icons" style="justify-content:center;margin-bottom:14px">${placeholders}</div><p style="margin:0">Хочеш почати колекціонувати нагороди? Виконай свою першу вправу в обраному відмінку, щоб розпочати!<span class="en" style="display:block;margin-top:6px;font-style:italic">Ready to start collecting rewards? Complete your first exercise in your chosen case to get started!</span></p></div>`;
 } else {
   const summary = document.createElement('p');
