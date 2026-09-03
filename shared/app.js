@@ -98,11 +98,11 @@ function updateGroupUI(groupKey){
       wireGroupReset(statusEl, groupKey);
     } else if(g.answered>0){
       statusEl.className = "group-status group-status-partial";
-      statusEl.innerHTML = `<span>Відповідано ${g.answered} із ${g.total} · ${g.answered} of ${g.total} questions answered.</span><button type="button" class="group-reset">Скинути / Reset</button>`;
+      statusEl.innerHTML = `<span>⏳ Відповідано ${g.answered} / ${g.total}.</span><button type="button" class="group-reset">Скинути / Reset</button>`;
       wireGroupReset(statusEl, groupKey);
     } else {
       statusEl.className = "group-status group-status-empty";
-      statusEl.textContent = `Відповідано 0 із ${g.total} · 0 of ${g.total} questions answered.`;
+      statusEl.textContent = `Готові почати? · Ready to start?`;
     }
   }
   const wrapperKey = groupWrapperMap[groupKey];
