@@ -70,6 +70,14 @@ details:not([open])>*:not(summary){display:none!important}
 .group-check{font-size:0.95rem}
 .group-reset{background:none;border:none;padding:0;color:#9FB0CC;text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-size:0.82rem;font-family:inherit}
 .group-reset:hover{color:#D4A24C}
+.celebrate-note{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 14px;background:rgba(76,154,106,0.12);border:1px solid rgba(76,154,106,0.4);border-radius:8px}
+.celebrate-emoji{font-size:1.3rem;flex-shrink:0}
+.celebrate-text{color:#BFE8CE;font-size:0.92rem}
+.celebrate-text .en{color:#9FB0CC;font-style:italic}
+@keyframes celebrate-pulse-top{0%,100%{background-color:#24365C}50%{background-color:rgba(76,154,106,0.45)}}
+@keyframes celebrate-pulse-sub{0%,100%{background-color:#1E2F52}50%{background-color:rgba(76,154,106,0.45)}}
+.top-details.celebrate-pulse{animation:celebrate-pulse-top 0.7s ease-in-out 2}
+.subtest.celebrate-pulse{animation:celebrate-pulse-sub 0.7s ease-in-out 2}
 .notes-details .body,.notes-details .detail-body{padding:0 0 4px}
 .section-desc{color:#9FB0CC;font-size:0.92rem;margin:0 0 18px}
 .mode-toggle{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}

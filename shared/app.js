@@ -73,7 +73,49 @@ function recordGroupAnswer(id, isCorrect){
   if(!g) return;
   g.answered++;
   if(isCorrect) g.correct++;
+  const justCompleted = g.answered>=g.total && !STORE[groupKey+"_cel"];
+  if(justCompleted){
+    STORE[groupKey+"_cel"]=true;
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STORE)); }catch(e){}
+  }
   updateGroupUI(groupKey);
+  if(justCompleted) celebrateGroup(groupKey);
+}
+
+// One themed message per possible score out of 10, shown as a permanent little note under
+// the exercise once it's complete (score 0-2 share a message; 10 is the one-off flourish).
+const CELEBRATIONS = [
+  {emoji:"😢🍲", text:`До ліжка, без борщу для тебе! <span class="en">Straight to bed, no borscht for you!</span>`},
+  {emoji:"😢🍲", text:`До ліжка, без борщу для тебе! <span class="en">Straight to bed, no borscht for you!</span>`},
+  {emoji:"😢🍲", text:`До ліжка, без борщу для тебе! <span class="en">Straight to bed, no borscht for you!</span>`},
+  {emoji:"🍞", text:`Черствий хліб. <span class="en">Stale bread. Try again!</span>`},
+  {emoji:"🥒", text:`Пів огірка. <span class="en">Half a cucumber. Respectable-ish, continue!</span>`},
+  {emoji:"🥣", text:`Тарілка каші. <span class="en">Bowl of kasha. Right down the middle, непогано!</span>`},
+  {emoji:"🥟", text:`Жменя вареників. <span class="en">A handful of dumplings. Smells like progress!</span>`},
+  {emoji:"🥓", text:`Шматочок сала. <span class="en">A slice of bacon fat. The taste of victory.</span>`},
+  {emoji:"🍯", text:`Баночка меду. <span class="en">A jar of honey. Sweet result!</span>`},
+  {emoji:"🌻", text:`Соняшникове насіння. <span class="en">One sunflower seed. So close!</span>`},
+  {emoji:"🇺🇦🎆", text:`Українське громадянство видано! <span class="en">Ukrainian citizenship: granted!</span>`}
+];
+
+function ensureCelebrateNote(el, g){
+  const body = el.querySelector(":scope > .body");
+  if(!body) return;
+  let note = body.querySelector(".celebrate-note");
+  if(!note){
+    note = document.createElement("div");
+    note.className = "celebrate-note";
+    body.appendChild(note);
+  }
+  const c = CELEBRATIONS[Math.max(0, Math.min(10, g.correct))];
+  note.innerHTML = `<span class="celebrate-emoji">${c.emoji}</span><span class="celebrate-text">${c.text}</span>`;
+}
+
+function celebrateGroup(groupKey){
+  const el = groupEls[groupKey];
+  if(!el) return;
+  el.classList.add("celebrate-pulse");
+  setTimeout(()=>el.classList.remove("celebrate-pulse"), 1400);
 }
 
 function wireGroupReset(statusEl, groupKey){
@@ -96,6 +138,7 @@ function updateGroupUI(groupKey){
       statusEl.className = "group-status group-status-complete";
       statusEl.innerHTML = `<span class="group-check">✅</span><span>Завершено · Complete. ${g.correct}/${g.total} правильно / correct.</span><button type="button" class="group-reset">Скинути / Reset</button>`;
       wireGroupReset(statusEl, groupKey);
+      ensureCelebrateNote(el, g);
     } else if(g.answered>0){
       statusEl.className = "group-status group-status-partial";
       statusEl.innerHTML = `<span>⏳ Відповідано ${g.answered} / ${g.total}.</span><button type="button" class="group-reset">Скинути / Reset</button>`;
