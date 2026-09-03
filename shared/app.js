@@ -320,7 +320,12 @@ function celebrateGroup(groupKey, isPerfect){
   const el = groupEls[groupKey];
   if(!el) return;
   if(isPerfect){
-    spawnConfetti(el);
+    // Anchored to the reward note itself, not the whole exercise card: a card can run to
+    // several screens for 10 questions, and confetti spawned at the card's own top edge would
+    // animate off-screen above wherever the learner is actually scrolled to (the note, by
+    // contrast, is always right where they just answered).
+    const note = el.querySelector(".celebrate-note");
+    if(note) spawnConfetti(note);
     return;
   }
   el.classList.add("celebrate-pulse");
@@ -330,7 +335,7 @@ function celebrateGroup(groupKey, isPerfect){
 // A small, deliberately low-frame-rate (stepped rather than smooth) confetti burst for a
 // perfect score, replacing the green pulse used for every other score. Kept cheap on purpose:
 // ~14 CSS-only pieces animating transform/opacity (GPU-composited, no per-frame JS), removed
-// from the DOM once the animation finishes. prefers-reduced-motion falls back to the plain pulse.
+// from the DOM once the animation finishes.
 function spawnConfetti(el){
   const colors = ["#0057B7","#FFD700","#D4A24C","#F2EEE3"];
   const wrap = document.createElement("div");
