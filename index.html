@@ -30,7 +30,10 @@
       <p>No sign-up, no tracking, no backend; everything runs in your browser and your progress is saved
       locally on your own device. A family-friendly resource for teachers and learners of Ukrainian language.</p>
     </div>
-    <p style="margin-top:16px"><a class="home-link" href="trophy.html">🏆 Моя колекція нагород · My reward collection</a></p>
+    <p style="margin-top:16px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px">
+      <a class="home-link" href="trophy.html" style="margin:0">🏆 Моя колекція нагород · My reward collection</a>
+      <button type="button" id="resetAllBtn" class="home-link" style="margin:0;background:none;border:none;padding:0;cursor:pointer;font:inherit" hidden>Скинути прогрес для всіх відмінків · Reset progress for all cases</button>
+    </p>
   </div>
 
   <div class="index-section">
@@ -100,5 +103,37 @@
   <footer>More cases and combined-practice pages are added over time. Corrections and suggestions welcome via <a href="https://github.com/hazymat/ukrainian-cases/issues" style="color:#9FB0CC">GitHub Issues</a>.</footer>
 </div>
 </div>
+
+<script>
+// Every case page's own progress lives under its own localStorage key; a page is "started" the
+// moment it has any saved key at all (STORE only ever gets keys written via an actual answer).
+const CASE_STORAGE_KEYS = [
+  "uk_case_nominative_progress_v1",
+  "uk_case_genitive_progress_v2",
+  "uk_case_accusative_progress_v2",
+  "uk_case_mixed_progress_v1"
+];
+function anyCaseStarted(){
+  return CASE_STORAGE_KEYS.some(key=>{
+    try{
+      const raw = localStorage.getItem(key);
+      if(!raw) return false;
+      return Object.keys(JSON.parse(raw)).length > 0;
+    }catch(e){ return false; }
+  });
+}
+const resetAllBtn = document.getElementById("resetAllBtn");
+if(resetAllBtn){
+  if(anyCaseStarted()) resetAllBtn.hidden = false;
+  resetAllBtn.addEventListener("click", ()=>{
+    const ok = confirm("Це скине весь твій прогрес. Усі твої трофеї зникнуть! Ти впевнений(-а)?\nThis will reset all your progress. All your trophies will disappear! Are you sure?");
+    if(!ok) return;
+    CASE_STORAGE_KEYS.forEach(key=>{ try{ localStorage.removeItem(key); }catch(e){} });
+    try{ localStorage.removeItem("uk_cases_reward_bag_v1"); }catch(e){}
+    try{ sessionStorage.clear(); }catch(e){}
+    location.reload();
+  });
+}
+</script>
 </body>
 </html>
