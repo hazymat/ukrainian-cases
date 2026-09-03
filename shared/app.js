@@ -319,7 +319,7 @@ function renderPageTrophies(){
 function celebrateGroup(groupKey, isPerfect){
   const el = groupEls[groupKey];
   if(!el) return;
-  if(isPerfect && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)){
+  if(isPerfect){
     spawnConfetti(el);
     return;
   }
