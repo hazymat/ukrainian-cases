@@ -152,7 +152,7 @@ const EMOJI_IMG_MAP = {
   "1f358":"rice-cracker", "1f32f":"burrito", "1f9c4":"garlic", "1f9f5":"thread",
   "1f34e":"red-apple", "1f33d":"corn", "1f352":"cherries", "1f373":"cooking",
   "1f370":"shortcake", "1f36f":"honey-pot", "1f475":"old-woman", "1f35e":"bread",
-  "1f37d":"fork-knife-plate", "1f3e1":"house-garden", "1f943":"tumbler-glass",
+  "1f37d":"fork-knife-plate", "1f3e1":"house-garden", "1f3db":"classical-building", "1f943":"tumbler-glass",
   "1f389":"party-popper", "1f377":"wine-glass", "1f95a":"egg", "1f6e2":"oil-drum",
   "1f376":"sake", "1f3c6":"trophy", "1f455":"tshirt", "1f33b":"sunflower"
 };
