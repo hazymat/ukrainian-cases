@@ -341,21 +341,36 @@ function spawnConfetti(el){
   const wrap = document.createElement("div");
   wrap.className = "confetti-burst";
   const rect = el.getBoundingClientRect();
+  // The rise and fall need to reach toward the real top and bottom of the window, not a fixed
+  // pixel amount from the spawn point -- otherwise a box near the bottom of a tall page has
+  // barely any visible rise and the pieces vanish off the bottom of the screen almost at once.
+  const peakPx = Math.max(90, rect.top - 20);
+  const fallPx = Math.min(1400, Math.max(260, window.innerHeight - rect.top + 100));
+  // Motion is driven directly (Web Animations API) rather than a fixed-percentage CSS
+  // @keyframes track, because a fixed time-split doesn't work once peak/fall distances vary
+  // this much: forcing a huge peak into the same 20%-of-duration slice as a small one made it
+  // rush upward, and left only a slow crawl for the remainder. Duration here is instead derived
+  // from real physics-like speeds -- a fast throw up (rise), a slow float down (fall) -- so a
+  // bigger distance takes proportionally longer rather than being rushed to fit a fixed time
+  // budget. The fall's time budget is sized from the FULL descent -- peakPx + fallPx, since the
+  // piece has to fall back down through the whole height it rose before it even reaches the
+  // spawn point, not just the fallPx below it -- an earlier version sized it from fallPx alone,
+  // which is what made it rush back down through the peak and only crawl for the rest.
+  const totalDrop = peakPx+fallPx;
+  const riseBase = Math.min(0.9, Math.max(0.2, peakPx/1200));
+  const fallBase = Math.min(3.2, Math.max(0.8, totalDrop/260));
   function throwWave(count){
     for(let i=0;i<count;i++){
       const piece = document.createElement("span");
       // Spread across the full width from the start (a burst-point cluster read as a single
       // narrow line); a little random vertical offset stops that starting row from looking
-      // like a flat line. Duration also varies per piece so they don't fall in lockstep, for
-      // a flutterier, less uniform feel.
+      // like a flat line.
       piece.className = "confetti-piece"+(i%3===0 ? " confetti-round" : "");
       const leftPct = Math.random()*100;
       piece.style.left = leftPct+"%";
       piece.style.top = (Math.random()*24-12)+"px";
       piece.style.background = colors[i % colors.length];
-      piece.style.animationDuration = (2.1+Math.random()*0.7)+"s";
-      piece.style.animationDelay = (Math.random()*0.25)+"s";
-      piece.style.setProperty("--rot", (Math.random()*480-240)+"deg");
+      const rot = Math.random()*480-240;
       // A fountain-like poof: drift is proportional to how far a piece already spawned from
       // the centre (a piece near the middle barely moves, one near an edge travels further
       // outward), so the spread fans out continuously instead of splitting into two piles
@@ -363,7 +378,48 @@ function spawnConfetti(el){
       // evenly graduated.
       const centreOffset = (leftPct-50)/50;
       const dx = centreOffset*rect.width*(0.4+Math.random()*0.3) + (Math.random()*70-35);
-      piece.style.setProperty("--dx", dx+"px");
+      // Per-piece jitter on the rise/fall durations, so pieces don't move in lockstep, for a
+      // flutterier, less uniform feel.
+      const rise = riseBase*(0.85+Math.random()*0.3);
+      const fall = fallBase*(0.85+Math.random()*0.3);
+      const total = rise+fall;
+      const peakOffset = rise/total;
+      // Built from a real quadratic "projectile" curve (constant deceleration on the way up,
+      // constant acceleration on the way down -- the same shape gravity gives a thrown object)
+      // instead of a handful of hand-picked waypoints with their own easing curves: that
+      // earlier approach kept leaving a velocity kink where two different easings met, which
+      // is exactly what read as "slows down then speeds up again" partway through. Sampling a
+      // single continuous formula at many points and joining the samples with plain straight
+      // lines has no seams to create that kink -- velocity passes through zero at the peak
+      // smoothly because the rise and fall formulas are mirror images of each other there.
+      const N = 28;
+      const kf = [];
+      for(let s=0;s<=N;s++){
+        const t = s/N;
+        let yFrac, dxFrac, rotFrac;
+        if(t<=peakOffset){
+          const tau = peakOffset>0 ? t/peakOffset : 1;
+          yFrac = 2*tau-tau*tau; // ease-out: fast start, decelerating to a stop at the peak
+          dxFrac = 0.35*yFrac;
+          rotFrac = 0.25*yFrac;
+        } else {
+          const tau = (1-peakOffset)>0 ? (t-peakOffset)/(1-peakOffset) : 1;
+          yFrac = tau*tau; // ease-in: starts from that same zero velocity, gently gathers speed
+          dxFrac = 0.35+0.65*yFrac;
+          rotFrac = 0.25+0.75*yFrac;
+        }
+        const y = t<=peakOffset ? -peakPx*yFrac : -peakPx+totalDrop*yFrac;
+        const opacity = Math.min(1, t/0.04) * Math.min(1, (1-t)/0.08);
+        const scale = 0.5+0.5*Math.min(1, t/0.05);
+        kf.push({
+          offset: t,
+          transform: `translate(${(dx*dxFrac).toFixed(1)}px,${y.toFixed(1)}px) rotate(${(rot*rotFrac).toFixed(1)}deg) scale(${scale.toFixed(2)})`,
+          opacity: opacity.toFixed(2),
+          easing: "linear"
+        });
+      }
+      piece.style.setProperty("--dur", total.toFixed(2)+"s");
+      piece.animate(kf, {duration: total*1000, fill:"forwards"});
       wrap.appendChild(piece);
     }
   }
@@ -372,7 +428,7 @@ function spawnConfetti(el){
   // appearing all at once, so it reads more like confetti being thrown than a single pop.
   const waveDelays = [0,150,300,450,600];
   waveDelays.forEach(delay=>setTimeout(()=>throwWave(20), delay));
-  setTimeout(()=>wrap.remove(), waveDelays[waveDelays.length-1]+3000);
+  setTimeout(()=>wrap.remove(), waveDelays[waveDelays.length-1]+(riseBase+fallBase)*1000+400);
 }
 
 // The reward/roast box (and its Reset button) is the only sign a completed exercise gives once
