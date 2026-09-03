@@ -103,7 +103,7 @@ function recordGroupAnswer(id, isCorrect, qEl){
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STORE)); }catch(e){}
   }
   updateGroupUI(groupKey);
-  if(justCompleted) celebrateGroup(groupKey);
+  if(justCompleted) celebrateGroup(groupKey, g.correct===g.total);
 }
 
 // Flags any question that comes before the last-answered one in its exercise but is itself still
@@ -316,11 +316,36 @@ function renderPageTrophies(){
   });
 }
 
-function celebrateGroup(groupKey){
+function celebrateGroup(groupKey, isPerfect){
   const el = groupEls[groupKey];
   if(!el) return;
+  if(isPerfect && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)){
+    spawnConfetti(el);
+    return;
+  }
   el.classList.add("celebrate-pulse");
   setTimeout(()=>el.classList.remove("celebrate-pulse"), 1400);
+}
+
+// A small, deliberately low-frame-rate (stepped rather than smooth) confetti burst for a
+// perfect score, replacing the green pulse used for every other score. Kept cheap on purpose:
+// ~14 CSS-only pieces animating transform/opacity (GPU-composited, no per-frame JS), removed
+// from the DOM once the animation finishes. prefers-reduced-motion falls back to the plain pulse.
+function spawnConfetti(el){
+  const colors = ["#0057B7","#FFD700","#D4A24C","#F2EEE3"];
+  const wrap = document.createElement("div");
+  wrap.className = "confetti-burst";
+  for(let i=0;i<14;i++){
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.left = (Math.random()*94+3)+"%";
+    piece.style.background = colors[i % colors.length];
+    piece.style.animationDelay = (Math.random()*0.25)+"s";
+    piece.style.setProperty("--rot", (Math.random()*360-180)+"deg");
+    wrap.appendChild(piece);
+  }
+  el.appendChild(wrap);
+  setTimeout(()=>wrap.remove(), 1500);
 }
 
 // The reward/roast box (and its Reset button) is the only sign a completed exercise gives once
